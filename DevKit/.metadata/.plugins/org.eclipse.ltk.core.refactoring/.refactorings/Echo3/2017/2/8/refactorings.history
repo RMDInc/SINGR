@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;Echo3/src/echo.c&apos; to &apos;echo1.c&apos;" description="Rename resource &apos;echo.c&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="src/echo.c" name="echo1.c" stamp="1487971095554" updateReferences="true"/>&#x0A;<refactoring comment="Move 1 resources to &apos;src&apos;" description="Move 1 resources to &apos;src&apos;" destination="src" element1="/Echo_Example/src/echo.c" flags="7" id="org.eclipse.ltk.core.refactoring.move.resources" resources="1" stamp="1487971490084" updateReferences="true"/>
+</session>

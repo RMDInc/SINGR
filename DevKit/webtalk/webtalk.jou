@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Webtalk v2015.3 (64-bit)
+# SW Build 1368829 on Mon Sep 28 20:06:43 MDT 2015
+# 
+# Start of session at: Tue Feb 28 12:05:12 2017
+# Process ID: 6736
+# Current directory: K:/users/SVogel/SINGR/SDK/SINGR3/webtalk
+# Command line: wbtcv.exe -mode batch -source sdk_webtalk.tcl
+# Log file: K:/users/SVogel/SINGR/SDK/SINGR3/webtalk/webtalk.log
+# Journal file: K:/users/SVogel/SINGR/SDK/SINGR3/webtalk\webtalk.jou
+#-----------------------------------------------------------
+source sdk_webtalk.tcl

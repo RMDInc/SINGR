@@ -1,0 +1,6 @@
+the_ROM_image:
+{
+	[bootloader]K:\users\SVogel\SINGR\SDK\SINGR3\MZ_FSBL\Release\MZ_FSBL.elf
+	K:\users\SVogel\SINGR\SDK\SINGR3\design_1_wrapper_hw_platform_0\design_1_wrapper.bit
+	K:\users\SVogel\SINGR\SDK\SINGR3\Echo3\Release\Echo3.elf
+}

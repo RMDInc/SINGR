@@ -1,0 +1,21 @@
+16:25:11 **** Auto Build of configuration Debug for project Echo_Example ****
+make all 
+'Building file: ../src/echo.c'
+'Invoking: ARM gcc compiler'
+arm-xilinx-eabi-gcc -Wall -O0 -g3 -c -fmessage-length=0 -MT"src/echo.o" -I../../standalone_bsp_0/ps7_cortexa9_0/include -MMD -MP -MF"src/echo.d" -MT"src/echo.d" -o "src/echo.o" "../src/echo.c"
+'Finished building: ../src/echo.c'
+' '
+'Building target: Echo_Example.elf'
+'Invoking: ARM gcc linker'
+arm-xilinx-eabi-gcc -Wl,-T -Wl,../src/lscript.ld -L../../standalone_bsp_0/ps7_cortexa9_0/lib -o "Echo_Example.elf"  ./src/echo.o ./src/i2c_access.o ./src/main.o ./src/platform.o ./src/platform_mb.o ./src/platform_ppc.o ./src/platform_zynq.o ./src/platform_zynqmp.o ./src/sfp.o ./src/si5324.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group
+'Finished building target: Echo_Example.elf'
+' '
+'Invoking: ARM Print Size'
+arm-xilinx-eabi-size Echo_Example.elf  |tee "Echo_Example.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+ 152460	   3164	 689980	 845604	  ce724	Echo_Example.elf
+'Finished building: Echo_Example.elf.size'
+' '
+
+16:25:12 Build Finished (took 1s.452ms)
+

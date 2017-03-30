@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item value="C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\Echo3\bootimage" key="bootgen_files_selection"/>
+	<item value="C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\design_1_wrapper_hw_platform_0" key="debug_bit_tcl_folder_selection"/>
+	<item value="C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\design_1_wrapper_hw_platform_0" key="program_fpga_view_bit_bmm_browse_key"/>
+	<item value="C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\Echo3\bootimage" key="zynq_flash_files_selection"/>
+	<item value="C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\Echo3\Debug" key="debug_app_selection"/>
+	<item value="C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\Echo3\bootimage" key="last_stored_selection"/>
+</section>
