@@ -1,6 +1,6 @@
-16:32:55 **** Incremental Build of configuration Debug for project MZ_FSBL ****
+17:50:55 **** Incremental Build of configuration Debug for project MZ_FSBL ****
 make all 
 make: Nothing to be done for `all'.
 
-16:32:55 Build Finished (took 123ms)
+17:50:55 Build Finished (took 129ms)
 

@@ -43,9 +43,9 @@
 #include "xil_printf.h"
 #endif
 
-struct tcp_pcb *globalTCP_pcb;	//global struct
-int transferWFType = 0;			//declared global again
-extern int g_menuSel;			//global menu variable
+struct tcp_pcb *globalTCP_pcb;
+int transferWFType = 0;
+extern int g_menuSel;
 
 int transfer_data() {
 	return 0;

@@ -695,11 +695,11 @@ int ether(){
 	txcomplete = 1;
 	while (txcomplete == 1) {
 		sw = XGpioPs_ReadPin(&Gpio, etherStop); //read pin
-
-		if (sw == 1) { //sw=1 when switch is pushed
-			txcomplete = 0; //invert value stored in toggle
-
-		}
+//
+//		if (sw == 1) { //sw=1 when switch is pushed
+//			txcomplete = 0; //invert value stored in toggle
+//
+//		}
 		if (TcpFastTmrFlag) {
 			tcp_fasttmr();
 			TcpFastTmrFlag = 0;

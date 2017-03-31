@@ -43,9 +43,9 @@
 #include "xil_printf.h"
 #endif
 
-struct tcp_pcb *globalTCP_pcb;	//global struct
-int transferWFType = 0;			//declared global again
-extern int g_menuSel;			//global menu variable
+struct tcp_pcb *globalTCP_pcb;
+
+extern int g_menuSel;
 
 int transfer_data() {
 	return 0;
@@ -70,26 +70,27 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 			int i,k;
 			char data[8192], data2[8192] ;
 			char buffer[6];
+			int var = 0;
 
 			a = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);
 			if (a == 4095)
 			{
-				if(transferWFType == 0){					//for AA waveforms
+				if(var == 0){					//for AA waveforms
 					dram_base = 0xa000000;
 					dram_cieling = 0xa004000;
 				}
-				if(transferWFType == 1){					//for LPF waveforms
+				if(var == 1){					//for LPF waveforms
 					dram_base = 0xa004004;
 					dram_cieling = 0xa008004;
 				}
-				if(transferWFType == 2){					//for DFF waveforms
+				if(var == 2){					//for DFF waveforms
 					dram_base = 0xa008008;
 					dram_cieling = 0xa00c008;
 				}
 
 				if(mode == 4)					//for processed data
 				{
-					if(transferWFType == 0)
+					if(var == 0)
 					{
 						// the statements below are the same as in DAQ()
 						Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);
@@ -126,10 +127,10 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 					err = tcp_write(tpcb, (void*)data, len,0x01);
 				}
 
-				transferWFType += 1;	//controls which type of waveform we get
-				if(transferWFType)	//start over at AA waveforms again
+				var += 1;	//controls which type of waveform we get
+				if(var == 3)	//start over at AA waveforms again
 				{
-					transferWFType = 0;
+					var = 0;
 				}
 			}
 			return ERR_OK;
