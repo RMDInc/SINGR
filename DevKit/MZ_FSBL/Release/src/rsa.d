@@ -16,7 +16,7 @@ src/rsa.o src/rsa.d: ../src/rsa.c ../src/fsbl.h \
  ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xstatus.h \
  ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xil_assert.h \
  ../src/fsbl_debug.h \
- C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\design_1_wrapper_hw_platform_0/ps7_init.h \
+ C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\design_1_wrapper_hw_platform_0/ps7_init.h \
  ../src/rsa.h ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xilrsa.h
 
 ../src/fsbl.h:
@@ -57,7 +57,7 @@ src/rsa.o src/rsa.d: ../src/rsa.c ../src/fsbl.h \
 
 ../src/fsbl_debug.h:
 
-C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\design_1_wrapper_hw_platform_0/ps7_init.h:
+C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\design_1_wrapper_hw_platform_0/ps7_init.h:
 
 ../src/rsa.h:
 

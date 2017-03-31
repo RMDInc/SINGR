@@ -141,6 +141,12 @@ int ProgramSfpPhy(void);
 #endif
 
 	init_platform();
+	ps7_post_config();
+	Xil_DCacheDisable();	//
+	InitializeAXIDma();		// Initialize the AXI DMA Transfer Interface
+	Xil_Out32 (XPAR_AXI_GPIO_16_BASEADDR, 16384);
+	Xil_Out32 (XPAR_AXI_GPIO_17_BASEADDR , 1);
+	InitializeInterruptSystem(XPAR_PS7_SCUGIC_0_DEVICE_ID);
 
 #if LWIP_DHCP==1
     ipaddr.addr = 0;

@@ -16,7 +16,7 @@ src/qspi.o src/qspi.d: ../src/qspi.c ../src/qspi.h ../src/fsbl.h \
  ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xstatus.h \
  ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xil_assert.h \
  ../src/fsbl_debug.h \
- C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\design_1_wrapper_hw_platform_0/ps7_init.h \
+ C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\design_1_wrapper_hw_platform_0/ps7_init.h \
  ../src/image_mover.h \
  ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xqspips_hw.h \
  ../../MZ_FSBL_bsp/ps7_cortexa9_0/include/xqspips.h \
@@ -62,7 +62,7 @@ src/qspi.o src/qspi.d: ../src/qspi.c ../src/qspi.h ../src/fsbl.h \
 
 ../src/fsbl_debug.h:
 
-C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\design_1_wrapper_hw_platform_0/ps7_init.h:
+C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\design_1_wrapper_hw_platform_0/ps7_init.h:
 
 ../src/image_mover.h:
 

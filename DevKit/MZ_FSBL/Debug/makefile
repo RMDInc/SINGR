@@ -35,7 +35,7 @@ all: MZ_FSBL.elf secondary-outputs
 MZ_FSBL.elf: $(OBJS) ../src/lscript.ld $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: ARM gcc linker'
-	arm-xilinx-eabi-gcc -L"C:\Users\GStoddard\Documents\GitHub\SINGR_DevKit\MZ_FSBL\src" -Wl,-T -Wl,../src/lscript.ld -L../../MZ_FSBL_bsp/ps7_cortexa9_0/lib -o "MZ_FSBL.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-xilinx-eabi-gcc -L"C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\MZ_FSBL\src" -Wl,-T -Wl,../src/lscript.ld -L../../MZ_FSBL_bsp/ps7_cortexa9_0/lib -o "MZ_FSBL.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
