@@ -127,7 +127,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 				}
 
 				transferWFType += 1;	//controls which type of waveform we get
-				if(transferWFType)	//start over at AA waveforms again
+				if(transferWFType == 3)	//start over at AA waveforms again
 				{
 					transferWFType = 0;
 				}

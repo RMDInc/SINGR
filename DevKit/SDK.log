@@ -559,3 +559,65 @@ Debug Operation Not Supported on the Target, Current Processor State is not "Sto
 16:34:30 INFO  : XSDB server has started successfully.
 16:59:26 INFO  : Launching XSDB server: xsdb.bat C:/Xilinx/SDK/2015.3/scripts/xsdb/xsdb/xsdb-server.tcl
 16:59:28 INFO  : XSDB server has started successfully.
+14:41:48 INFO  : Launching XSDB server: xsdb.bat C:/Xilinx/SDK/2015.3/scripts/xsdb/xsdb/xsdb-server.tcl
+14:41:50 INFO  : XSDB server has started successfully.
+15:20:52 INFO  : Invoking Bootgen: bootgen -image Echo3_1.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\BOOT1.bin -w on
+15:20:53 INFO  : Bootgen command execution is done.
+15:21:04 INFO  : Invoking Bootgen: bootgen -image Echo3.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\BOOT1.mcs -w on
+15:21:09 INFO  : Bootgen command execution is done.
+15:27:36 INFO  : Launching XSDB server: xsdb.bat C:/Xilinx/SDK/2015.3/scripts/xsdb/xsdb/xsdb-server.tcl
+15:27:38 INFO  : XSDB server has started successfully.
+15:31:56 INFO  : Launching XSDB server: xsdb.bat C:/Xilinx/SDK/2015.3/scripts/xsdb/xsdb/xsdb-server.tcl
+15:31:58 INFO  : XSDB server has started successfully.
+15:36:10 INFO  : Invoking Bootgen: bootgen -image Echo3_2.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\BOOT2.bin
+15:36:10 INFO  : Creating new bif file C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\Echo3_2.bif
+15:36:10 INFO  : Bootgen command execution is done.
+15:37:35 INFO  : Invoking Bootgen: bootgen -image Echo3_2.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\BOOT2.mcs
+15:37:37 INFO  : Bootgen command execution is done.
+15:38:26 INFO  : Invoking Bootgen: bootgen -image Echo3_2.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\BOOT2.mcs -w on
+15:38:29 INFO  : Bootgen command execution is done.
+15:55:28 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:55:50 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+15:55:50 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS3 210299A06C82" && level==0} -index 1' command is executed.
+15:55:53 INFO  : FPGA configured successfully with bitstream "C:/Users/GStoddard/Documents/GitHub/SINGR_DevKit/design_1_wrapper_hw_platform_0/design_1_wrapper.bit"
+15:57:35 INFO  : ps7_init is completed.
+15:57:35 INFO  : ps7_post_config is completed.
+15:57:35 INFO  : Processor reset is completed for ps7_cortexa9_0
+16:01:42 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+16:01:42 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS3 210299A06C82" && level==0} -index 1' command is executed.
+16:01:45 INFO  : FPGA configured successfully with bitstream "C:/Users/GStoddard/Documents/GitHub/SINGR_DevKit/design_1_wrapper_hw_platform_0/design_1_wrapper.bit"
+16:02:15 INFO  : ps7_init is completed.
+16:02:15 INFO  : ps7_post_config is completed.
+16:02:15 INFO  : Processor reset is completed for ps7_cortexa9_0
+16:04:05 INFO  : ps7_init is completed.
+16:04:05 INFO  : ps7_post_config is completed.
+16:04:05 INFO  : Processor reset is completed for ps7_cortexa9_0
+16:09:05 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+16:09:05 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS3 210299A06C82" && level==0} -index 1' command is executed.
+16:09:08 INFO  : FPGA configured successfully with bitstream "C:/Users/GStoddard/Documents/GitHub/SINGR_DevKit/design_1_wrapper_hw_platform_0/design_1_wrapper.bit"
+16:09:21 ERROR : Unexpected error while launching program.
+java.lang.RuntimeException: Error while running ps7_init method.
+Debug Operation Not Supported on the Target, Current Processor State is not "Stopped"
+
+	at com.xilinx.sdk.targetmanager.internal.TM.run_ps7_init(TM.java:1089)
+	at com.xilinx.sdk.debug.core.XilinxAppLaunchConfigurationDelegate.runTargetSetup(XilinxAppLaunchConfigurationDelegate.java:486)
+	at com.xilinx.sdk.debug.core.XilinxAppLaunchConfigurationDelegate.debugApplication(XilinxAppLaunchConfigurationDelegate.java:673)
+	at com.xilinx.sdk.debug.core.XilinxAppLaunchConfigurationDelegate.launch(XilinxAppLaunchConfigurationDelegate.java:298)
+	at com.xilinx.sdk.debug.ui.XilinxAppLaunchDelegateWrapper.launch(XilinxAppLaunchDelegateWrapper.java:31)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:858)
+	at org.eclipse.debug.internal.core.LaunchConfiguration.launch(LaunchConfiguration.java:707)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin.buildAndLaunch(DebugUIPlugin.java:1018)
+	at org.eclipse.debug.internal.ui.DebugUIPlugin$8.run(DebugUIPlugin.java:1222)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:53)
+16:09:42 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+16:09:42 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-HS3 210299A06C82" && level==0} -index 1' command is executed.
+16:09:44 INFO  : FPGA configured successfully with bitstream "C:/Users/GStoddard/Documents/GitHub/SINGR_DevKit/design_1_wrapper_hw_platform_0/design_1_wrapper.bit"
+16:09:53 INFO  : ps7_init is completed.
+16:09:54 INFO  : ps7_post_config is completed.
+16:09:54 INFO  : Processor reset is completed for ps7_cortexa9_0
+16:14:00 INFO  : Invoking Bootgen: bootgen -image Echo3_3.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\boot3.bin
+16:14:00 INFO  : Creating new bif file C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\Echo3_3.bif
+16:14:01 INFO  : Bootgen command execution is done.
+16:14:38 INFO  : Invoking Bootgen: bootgen -image Echo3_3.bif -o C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\bootimage\boot3.mcs
+16:14:41 INFO  : Bootgen command execution is done.
+16:24:23 ERROR : Unexpected error while parsing XMD response ?: com.google.gson.JsonSyntaxException: com.google.gson.stream.MalformedJsonException: invalid number or unquoted string near 
