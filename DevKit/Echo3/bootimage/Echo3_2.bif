@@ -1,6 +1,0 @@
-the_ROM_image:
-{
-	[bootloader]C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\MZ_FSBL\Release\MZ_FSBL.elf
-	C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\design_1_wrapper_hw_platform_0\design_1_wrapper.bit
-	C:\Users\GStoddard\Documents\GitHub\SINGR\DevKit\Echo3\Release\Echo3.elf
-}
