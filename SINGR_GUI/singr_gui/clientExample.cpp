@@ -149,15 +149,15 @@ int Client::Recv(int intArray[12291], int placeInArray)		//bool Recv() need to p
 		pmsg = new char[DEFAULT_BUFFER_LENGTH];		// msg[65536]
 		strncpy(pmsg, precvBuff, iResult);			// Copy the contents of recvbuf -> msg
 
-		//Print the value of iResult to a file?? that way we see how much is coming in		
-		ofstream output_file_3;
+		//Print the value of iResult to a file?? that way we see how much is coming in // Don't need this for now
+/*		ofstream output_file_3;
 		output_file_3.open("iResultsizes.txt",ios::app);
 		if(!output_file_3.is_open())
 		{
 			return 1;
 		}
 		output_file_3 << "Transfer" << transferNum++ << endl;
-		output_file_3 << iResult << endl; 
+		output_file_3 << iResult << endl;  */
 
 		delete [] precvBuff;
 		precvBuff = nullptr;

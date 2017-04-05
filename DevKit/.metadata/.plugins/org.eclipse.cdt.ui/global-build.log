@@ -1,0 +1,40 @@
+16:12:47 **** Incremental Build of configuration Release for project Echo3 ****
+make all 
+'Building file: ../src/echo.c'
+'Invoking: ARM gcc compiler'
+arm-xilinx-eabi-gcc -Wall -O2 -c -fmessage-length=0 -MT"src/echo.o" -I../../standalone_bsp_0/ps7_cortexa9_0/include -MMD -MP -MF"src/echo.d" -MT"src/echo.d" -o "src/echo.o" "../src/echo.c"
+../src/echo.c: In function 'recv_callback':
+../src/echo.c:72:9: warning: unused variable 'buffer' [-Wunused-variable]
+    char buffer[6];
+         ^
+../src/echo.c:71:21: warning: unused variable 'data2' [-Wunused-variable]
+    char data[8192], data2[8192] ;
+                     ^
+../src/echo.c:70:10: warning: variable 'k' set but not used [-Wunused-but-set-variable]
+    int i,k;
+          ^
+../src/echo.c:70:8: warning: unused variable 'i' [-Wunused-variable]
+    int i,k;
+        ^
+../src/echo.c:69:12: warning: unused variable 'blen' [-Wunused-variable]
+    int len,blen,a;
+            ^
+'Finished building: ../src/echo.c'
+' '
+'Building target: Echo3.elf'
+'Invoking: ARM gcc linker'
+arm-xilinx-eabi-gcc -Wl,-T -Wl,../src/lscript.ld -L../../standalone_bsp_0/ps7_cortexa9_0/lib -o "Echo3.elf"  ./src/echo.o ./src/i2c_access.o ./src/main.o ./src/platform.o ./src/platform_mb.o ./src/platform_ppc.o ./src/platform_zynq.o ./src/platform_zynqmp.o ./src/ps7_init.o ./src/readEtherPoll.o ./src/sfp.o ./src/si5324.o ./src/sockets.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group
+'Finished building target: Echo3.elf'
+' '
+'Invoking: ARM Print Size'
+arm-xilinx-eabi-size Echo3.elf  |tee "Echo3.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+ 175012	  13996	 690252	 879260	  d6a9c	Echo3.elf
+'Finished building: Echo3.elf.size'
+' '
+16:14:01 **** Auto Build of configuration Release for project Echo3 ****
+make all 
+make: Nothing to be done for `all'.
+16:14:42 **** Auto Build of configuration Release for project Echo3 ****
+make all 
+make: Nothing to be done for `all'.

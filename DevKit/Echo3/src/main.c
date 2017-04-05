@@ -610,9 +610,9 @@ int PrintData( ){
 
 	//Read all data from DRAM
 //	int dram_base = 0xa000000;
-    int dram_cieling = 0xa00ffff; //read out data from all integration channels
+    int dram_cieling = 0xa00ffff; //read out data from all integration channels	//167837695
 
-	// Read only Adj Average data from DRAM
+	// Read only Adj Average data from DRAM	//167772160
 	int dram_base = 0xa000000;
 	//int dram_cieling = 0xA004000; //read out just adjacent average (0xA004000 - 0xa000000 = 16384)
 
@@ -698,6 +698,7 @@ int ether(){
 
 		if (sw == 1) { //sw=1 when switch is pushed
 			txcomplete = 0; //invert value stored in toggle
+			//continue; //break out and stop looping
 
 		}
 		if (TcpFastTmrFlag) {

@@ -257,8 +257,10 @@ namespace singr_gui {
 			chartArea1->AxisX->IsStartedFromZero = false;
 			chartArea1->AxisX->Maximum = 200000;
 			chartArea1->AxisX->Minimum = 0;
+			chartArea1->AxisX->Title = L"Energy (keV)";
 			chartArea1->AxisY->Maximum = 2;
 			chartArea1->AxisY->Minimum = 0;
+			chartArea1->AxisY->Title = L"PSD Ratio";
 			chartArea1->Name = L"ChartArea1";
 			this->ch_PSD->ChartAreas->Add(chartArea1);
 			this->ch_PSD->Location = System::Drawing::Point(12, 27);
@@ -306,9 +308,11 @@ namespace singr_gui {
 			chartArea2->AxisX->IsStartedFromZero = false;
 			chartArea2->AxisX->Maximum = 200000;
 			chartArea2->AxisX->Minimum = 0;
+			chartArea2->AxisX->Title = L"Energy (keV)";
 			chartArea2->AxisY->IsStartedFromZero = false;
 			chartArea2->AxisY->Maximum = 500;
 			chartArea2->AxisY->Minimum = 0;
+			chartArea2->AxisY->Title = L"Counts";
 			chartArea2->Name = L"ChartArea1";
 			this->ch_ESpectrum->ChartAreas->Add(chartArea2);
 			this->ch_ESpectrum->Location = System::Drawing::Point(12, 369);
@@ -462,9 +466,11 @@ namespace singr_gui {
 			chartArea3->AxisX->IsStartedFromZero = false;
 			chartArea3->AxisX->Maximum = 2;
 			chartArea3->AxisX->Minimum = 0;
+			chartArea3->AxisX->Title = L"PSD Ratio";
 			chartArea3->AxisY->IsStartedFromZero = false;
 			chartArea3->AxisY->Maximum = 500;
 			chartArea3->AxisY->Minimum = 0;
+			chartArea3->AxisY->Title = L"Counts";
 			chartArea3->Name = L"ChartArea1";
 			this->ch_FOM->ChartAreas->Add(chartArea3);
 			this->ch_FOM->Location = System::Drawing::Point(727, 27);
