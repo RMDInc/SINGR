@@ -30,7 +30,6 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 # If you do not already have a project created,
 # you can create a project using the following command:
 #    create_project project_1 myproj -part xc7z020clg400-1
-#    set_property BOARD_PART em.avnet.com:microzed_7020:part0:1.0 [current_project]
 
 # CHECKING IF PROJECT EXISTS
 if { [get_projects -quiet] eq "" } {
@@ -178,8 +177,8 @@ CONFIG.FREQ_HZ {250000000} \
   # Create instance: MUX6_0, and set properties
   set MUX6_0 [ create_bd_cell -type ip -vlnv rmdinc.com:user:MUX6:1.0 MUX6_0 ]
 
-  # Create instance: Master_Slave_Stream_v1_0_0, and set properties
-  set Master_Slave_Stream_v1_0_0 [ create_bd_cell -type ip -vlnv rmdinc.com:user:Master_Slave_Stream_v1_0:1.0 Master_Slave_Stream_v1_0_0 ]
+  # Create instance: Master_Slave_Stream_v2_0_0, and set properties
+  set Master_Slave_Stream_v2_0_0 [ create_bd_cell -type ip -vlnv rmdinc.com:user:Master_Slave_Stream_v2_0:1.0 Master_Slave_Stream_v2_0_0 ]
 
   # Create instance: TriggerV2_0, and set properties
   set TriggerV2_0 [ create_bd_cell -type ip -vlnv rmdinc.com:user:TriggerV2:1.0 TriggerV2_0 ]
@@ -313,6 +312,12 @@ CONFIG.C_GPIO_WIDTH {1} \
   set_property -dict [ list \
 CONFIG.C_GPIO_WIDTH {15} \
  ] $axi_gpio_19
+
+  # Create instance: axi_gpio_20, and set properties
+  set axi_gpio_20 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_20 ]
+  set_property -dict [ list \
+CONFIG.C_GPIO_WIDTH {14} \
+ ] $axi_gpio_20
 
   # Create instance: axi_mem_intercon, and set properties
   set axi_mem_intercon [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon ]
@@ -699,7 +704,7 @@ CONFIG.PCW_USE_S_AXI_HP0 {1} \
   # Create instance: processing_system7_0_axi_periph, and set properties
   set processing_system7_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 processing_system7_0_axi_periph ]
   set_property -dict [ list \
-CONFIG.NUM_MI {21} \
+CONFIG.NUM_MI {22} \
  ] $processing_system7_0_axi_periph
 
   # Create instance: readout_0, and set properties
@@ -741,7 +746,7 @@ CONFIG.CONST_VAL {0} \
  ] $xlconstant_1
 
   # Create interface connections
-  connect_bd_intf_net -intf_net Master_Slave_Stream_v1_0_0_m00_axis [get_bd_intf_pins Master_Slave_Stream_v1_0_0/m00_axis] [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM]
+  connect_bd_intf_net -intf_net Master_Slave_Stream_v2_0_1_m00_axis [get_bd_intf_pins Master_Slave_Stream_v2_0_0/m00_axis] [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM]
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins processing_system7_0/M_AXI_GP0] [get_bd_intf_pins processing_system7_0_axi_periph/S00_AXI]
   connect_bd_intf_net -intf_net axi_dma_0_M_AXI_S2MM [get_bd_intf_pins axi_dma_0/M_AXI_S2MM] [get_bd_intf_pins axi_mem_intercon/S00_AXI]
   connect_bd_intf_net -intf_net axi_mem_intercon_M00_AXI [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
@@ -768,20 +773,22 @@ CONFIG.CONST_VAL {0} \
   connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M18_AXI [get_bd_intf_pins axi_gpio_17/S_AXI] [get_bd_intf_pins processing_system7_0_axi_periph/M18_AXI]
   connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M19_AXI [get_bd_intf_pins axi_gpio_18/S_AXI] [get_bd_intf_pins processing_system7_0_axi_periph/M19_AXI]
   connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M20_AXI [get_bd_intf_pins axi_gpio_19/S_AXI] [get_bd_intf_pins processing_system7_0_axi_periph/M20_AXI]
+  connect_bd_intf_net -intf_net processing_system7_0_axi_periph_M21_AXI [get_bd_intf_pins axi_gpio_20/S_AXI] [get_bd_intf_pins processing_system7_0_axi_periph/M21_AXI]
 
   # Create port connections
   connect_bd_net -net AA_0_dout [get_bd_pins AA_0/dout] [get_bd_pins DFF_0/AAvg] [get_bd_pins TriggerV2_0/AAvg] [get_bd_pins c_shift_ram_0/D] [get_bd_pins mult_gen_0/A] [get_bd_pins xlconcat_1/In0]
-  connect_bd_net -net AA_IntegratorV3_0_dout [get_bd_pins AA_IntegratorV3_0/dout] [get_bd_pins readout_0/AA]
-  connect_bd_net -net AA_IntegratorV3_0_rdcnt [get_bd_pins AA_IntegratorV3_0/rdcnt] [get_bd_pins axi_gpio_19/gpio_io_i]
-  connect_bd_net -net AA_IntegratorV3_0_wrcnt [get_bd_pins AA_IntegratorV3_0/wrcnt] [get_bd_pins axi_gpio_11/gpio_io_i]
+  connect_bd_net -net AA_IntegratorV3_1_dout [get_bd_pins AA_IntegratorV3_0/dout] [get_bd_pins readout_0/AA]
+  connect_bd_net -net AA_IntegratorV3_1_rdcnt [get_bd_pins AA_IntegratorV3_0/rdcnt] [get_bd_pins axi_gpio_19/gpio_io_i]
+  connect_bd_net -net AA_IntegratorV3_1_wrcnt [get_bd_pins AA_IntegratorV3_0/wrcnt] [get_bd_pins axi_gpio_11/gpio_io_i]
   connect_bd_net -net DFF_0_dout [get_bd_pins DFF_0/dout] [get_bd_pins c_shift_ram_1/D]
-  connect_bd_net -net DFF_Integrator_1_dout [get_bd_pins DFF_Integrator_0/dout] [get_bd_pins readout_0/DFF]
-  connect_bd_net -net DFF_Integrator_1_wrcnt [get_bd_pins DFF_Integrator_0/wrcnt] [get_bd_pins axi_gpio_13/gpio_io_i]
+  connect_bd_net -net DFF_Integrator_0_dout [get_bd_pins DFF_Integrator_0/dout] [get_bd_pins readout_0/DFF]
+  connect_bd_net -net DFF_Integrator_0_wrcnt [get_bd_pins DFF_Integrator_0/wrcnt] [get_bd_pins axi_gpio_13/gpio_io_i]
   connect_bd_net -net LPF_Integrator_1_dout [get_bd_pins LPF_Integrator_0/dout] [get_bd_pins readout_0/LPF]
   connect_bd_net -net LPF_Integrator_1_wrcnt [get_bd_pins LPF_Integrator_0/wrcnt] [get_bd_pins axi_gpio_12/gpio_io_i]
-  connect_bd_net -net MUX6_0_dout [get_bd_pins MUX6_0/dout] [get_bd_pins Master_Slave_Stream_v1_0_0/din]
+  connect_bd_net -net MUX6_0_dout [get_bd_pins MUX6_0/dout] [get_bd_pins Master_Slave_Stream_v2_0_0/din]
   connect_bd_net -net MUX6_0_en_integration [get_bd_pins MUX6_0/en_integration] [get_bd_pins gater_0/off]
-  connect_bd_net -net MUX6_0_logic_out [get_bd_pins MUX6_0/logic_out] [get_bd_pins Master_Slave_Stream_v1_0_0/wren]
+  connect_bd_net -net MUX6_0_logic_out [get_bd_pins MUX6_0/logic_out] [get_bd_pins Master_Slave_Stream_v2_0_0/wren]
+  connect_bd_net -net Master_Slave_Stream_v2_0_0_wrcount [get_bd_pins Master_Slave_Stream_v2_0_0/wrcount] [get_bd_pins axi_gpio_20/gpio_io_i]
   connect_bd_net -net TTL_In_1 [get_bd_ports TTL_In] [get_bd_pins LPF_Integrator_0/ttl_in] [get_bd_pins one_shot_0/D]
   connect_bd_net -net TriggerV2_0_we [get_bd_pins TriggerV2_0/we] [get_bd_pins c_counter_binary_0/CLK]
   connect_bd_net -net Trigger_0_event_done [get_bd_pins Trigger_0/event_done] [get_bd_pins c_shift_ram_4/D] [get_bd_pins gater_0/rst1]
@@ -792,8 +799,8 @@ CONFIG.CONST_VAL {0} \
   connect_bd_net -net axi_gpio_10_gpio_io_o [get_bd_pins TriggerV2_0/threshold] [get_bd_pins Trigger_0/threshold] [get_bd_pins axi_gpio_10/gpio_io_i] [get_bd_pins axi_gpio_10/gpio_io_o]
   connect_bd_net -net axi_gpio_14_gpio_io_o [get_bd_pins MUX6_0/cntrl] [get_bd_pins axi_gpio_14/gpio_io_o]
   connect_bd_net -net axi_gpio_15_gpio_io_o [get_bd_pins axi_gpio_15/gpio_io_o] [get_bd_pins readout_0/cntrl]
-  connect_bd_net -net axi_gpio_16_gpio_io_o [get_bd_pins Master_Slave_Stream_v1_0_0/FrameSize] [get_bd_pins axi_gpio_16/gpio_io_o]
-  connect_bd_net -net axi_gpio_17_gpio_io_o [get_bd_pins Master_Slave_Stream_v1_0_0/En] [get_bd_pins axi_gpio_17/gpio_io_o]
+  connect_bd_net -net axi_gpio_16_gpio_io_o [get_bd_pins Master_Slave_Stream_v2_0_0/FrameSize] [get_bd_pins axi_gpio_16/gpio_io_o]
+  connect_bd_net -net axi_gpio_17_gpio_io_o [get_bd_pins Master_Slave_Stream_v2_0_0/En] [get_bd_pins axi_gpio_17/gpio_io_o]
   connect_bd_net -net axi_gpio_18_gpio_io_o [get_bd_pins axi_gpio_18/gpio_io_o] [get_bd_pins capture_0/wren]
   connect_bd_net -net axi_gpio_1_gpio_io_o [get_bd_pins axi_gpio_1/gpio_io_i] [get_bd_pins axi_gpio_1/gpio_io_o] [get_bd_pins c_shift_ram_7/D]
   connect_bd_net -net axi_gpio_2_gpio_io_o [get_bd_pins axi_gpio_2/gpio_io_i] [get_bd_pins axi_gpio_2/gpio_io_o] [get_bd_pins c_shift_ram_8/D]
@@ -813,8 +820,8 @@ CONFIG.CONST_VAL {0} \
   connect_bd_net -net c_shift_ram_6_Q [get_bd_pins AA_IntegratorV3_0/i1s] [get_bd_pins c_shift_ram_6/Q]
   connect_bd_net -net c_shift_ram_7_Q [get_bd_pins AA_IntegratorV3_0/i2s] [get_bd_pins c_shift_ram_7/Q]
   connect_bd_net -net c_shift_ram_8_Q [get_bd_pins AA_IntegratorV3_0/i3s] [get_bd_pins c_shift_ram_8/Q]
-  connect_bd_net -net c_shift_ram_9_Q [get_bd_pins AA_IntegratorV3_0/i4s] [get_bd_pins c_shift_ram_9/Q]
-  connect_bd_net -net capture_0_clkout [get_bd_pins AA_0/clk] [get_bd_pins AA_IntegratorV3_0/clk] [get_bd_pins DFF_0/clk] [get_bd_pins DFF_Integrator_0/clk] [get_bd_pins LPF_Integrator_0/clk] [get_bd_pins MUX6_0/clk] [get_bd_pins Master_Slave_Stream_v1_0_0/wrclk] [get_bd_pins TriggerV2_0/clk] [get_bd_pins Trigger_0/clk] [get_bd_pins c_shift_ram_0/CLK] [get_bd_pins c_shift_ram_1/CLK] [get_bd_pins c_shift_ram_2/CLK] [get_bd_pins c_shift_ram_3/CLK] [get_bd_pins c_shift_ram_4/CLK] [get_bd_pins c_shift_ram_5/CLK] [get_bd_pins capture_0/clkout] [get_bd_pins gater_0/clk] [get_bd_pins lpf_0/clk] [get_bd_pins mult_gen_0/CLK] [get_bd_pins mult_gen_1/CLK] [get_bd_pins one_shot_0/clk] [get_bd_pins readout_0/clk]
+  connect_bd_net -net c_shift_ram_9_Q [get_bd_pins AA_IntegratorV3_0/i4s] [get_bd_pins Trigger_0/SetWindow] [get_bd_pins c_shift_ram_9/Q]
+  connect_bd_net -net capture_0_clkout [get_bd_pins AA_0/clk] [get_bd_pins AA_IntegratorV3_0/clk] [get_bd_pins DFF_0/clk] [get_bd_pins DFF_Integrator_0/clk] [get_bd_pins LPF_Integrator_0/clk] [get_bd_pins MUX6_0/clk] [get_bd_pins Master_Slave_Stream_v2_0_0/wrclk] [get_bd_pins TriggerV2_0/clk] [get_bd_pins Trigger_0/clk] [get_bd_pins c_shift_ram_0/CLK] [get_bd_pins c_shift_ram_1/CLK] [get_bd_pins c_shift_ram_2/CLK] [get_bd_pins c_shift_ram_3/CLK] [get_bd_pins c_shift_ram_4/CLK] [get_bd_pins c_shift_ram_5/CLK] [get_bd_pins capture_0/clkout] [get_bd_pins gater_0/clk] [get_bd_pins lpf_0/clk] [get_bd_pins mult_gen_0/CLK] [get_bd_pins mult_gen_1/CLK] [get_bd_pins one_shot_0/clk] [get_bd_pins readout_0/clk]
   connect_bd_net -net capture_0_dout [get_bd_pins AA_0/din] [get_bd_pins capture_0/dout]
   connect_bd_net -net capture_0_load [get_bd_pins AA_0/en] [get_bd_pins DFF_0/en] [get_bd_pins capture_0/load] [get_bd_pins lpf_0/load]
   connect_bd_net -net clkin_n_1 [get_bd_ports clkin_n] [get_bd_pins capture_0/clkin_n]
@@ -822,7 +829,7 @@ CONFIG.CONST_VAL {0} \
   connect_bd_net -net din_n_1 [get_bd_ports din_n] [get_bd_pins capture_0/din_n]
   connect_bd_net -net din_p_1 [get_bd_ports din_p] [get_bd_pins capture_0/din_p]
   connect_bd_net -net fit_timer_0_Interrupt [get_bd_pins fit_timer_0/Interrupt] [get_bd_pins xlconcat_0/In1]
-  connect_bd_net -net gater_0_rst [get_bd_pins Master_Slave_Stream_v1_0_0/rst] [get_bd_pins gater_0/rst]
+  connect_bd_net -net gater_0_rst [get_bd_pins Master_Slave_Stream_v2_0_0/rst] [get_bd_pins gater_0/rst]
   connect_bd_net -net lpf_0_CE_O [get_bd_pins lpf_0/CE_O] [get_bd_pins mult_gen_0/CE]
   connect_bd_net -net lpf_0_L_n1 [get_bd_pins lpf_0/L_n1] [get_bd_pins mult_gen_1/A]
   connect_bd_net -net lpf_0_dout [get_bd_pins c_shift_ram_3/D] [get_bd_pins lpf_0/dout]
@@ -831,8 +838,8 @@ CONFIG.CONST_VAL {0} \
   connect_bd_net -net mult_gen_1_P [get_bd_pins lpf_0/P2] [get_bd_pins mult_gen_1/P]
   connect_bd_net -net one_shot_0_Q [get_bd_pins LPF_Integrator_0/ttl_on] [get_bd_pins one_shot_0/Q] [get_bd_pins util_vector_logic_0/Op1]
   connect_bd_net -net one_shot_0_Qn [get_bd_pins LPF_Integrator_0/ttl_off] [get_bd_pins one_shot_0/Qn] [get_bd_pins util_vector_logic_0/Op2]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins Master_Slave_Stream_v1_0_0/m00_axis_aclk] [get_bd_pins Master_Slave_Stream_v1_0_0/s00_axis_aclk] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_gpio_1/s_axi_aclk] [get_bd_pins axi_gpio_10/s_axi_aclk] [get_bd_pins axi_gpio_11/s_axi_aclk] [get_bd_pins axi_gpio_12/s_axi_aclk] [get_bd_pins axi_gpio_13/s_axi_aclk] [get_bd_pins axi_gpio_14/s_axi_aclk] [get_bd_pins axi_gpio_15/s_axi_aclk] [get_bd_pins axi_gpio_16/s_axi_aclk] [get_bd_pins axi_gpio_17/s_axi_aclk] [get_bd_pins axi_gpio_18/s_axi_aclk] [get_bd_pins axi_gpio_19/s_axi_aclk] [get_bd_pins axi_gpio_2/s_axi_aclk] [get_bd_pins axi_gpio_3/s_axi_aclk] [get_bd_pins axi_gpio_4/s_axi_aclk] [get_bd_pins axi_gpio_5/s_axi_aclk] [get_bd_pins axi_gpio_6/s_axi_aclk] [get_bd_pins axi_gpio_7/s_axi_aclk] [get_bd_pins axi_gpio_8/s_axi_aclk] [get_bd_pins axi_gpio_9/s_axi_aclk] [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins c_shift_ram_6/CLK] [get_bd_pins c_shift_ram_7/CLK] [get_bd_pins c_shift_ram_8/CLK] [get_bd_pins c_shift_ram_9/CLK] [get_bd_pins fit_timer_0/Clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0_axi_periph/M00_ACLK] [get_bd_pins processing_system7_0_axi_periph/M01_ACLK] [get_bd_pins processing_system7_0_axi_periph/M02_ACLK] [get_bd_pins processing_system7_0_axi_periph/M03_ACLK] [get_bd_pins processing_system7_0_axi_periph/M04_ACLK] [get_bd_pins processing_system7_0_axi_periph/M05_ACLK] [get_bd_pins processing_system7_0_axi_periph/M06_ACLK] [get_bd_pins processing_system7_0_axi_periph/M07_ACLK] [get_bd_pins processing_system7_0_axi_periph/M08_ACLK] [get_bd_pins processing_system7_0_axi_periph/M09_ACLK] [get_bd_pins processing_system7_0_axi_periph/M10_ACLK] [get_bd_pins processing_system7_0_axi_periph/M11_ACLK] [get_bd_pins processing_system7_0_axi_periph/M12_ACLK] [get_bd_pins processing_system7_0_axi_periph/M13_ACLK] [get_bd_pins processing_system7_0_axi_periph/M14_ACLK] [get_bd_pins processing_system7_0_axi_periph/M15_ACLK] [get_bd_pins processing_system7_0_axi_periph/M16_ACLK] [get_bd_pins processing_system7_0_axi_periph/M17_ACLK] [get_bd_pins processing_system7_0_axi_periph/M18_ACLK] [get_bd_pins processing_system7_0_axi_periph/M19_ACLK] [get_bd_pins processing_system7_0_axi_periph/M20_ACLK] [get_bd_pins processing_system7_0_axi_periph/S00_ACLK] [get_bd_pins rst_processing_system7_0_100M/slowest_sync_clk]
-  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_pins AA_IntegratorV3_0/timer_clk] [get_bd_pins processing_system7_0/FCLK_CLK1]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins Master_Slave_Stream_v2_0_0/m00_axis_aclk] [get_bd_pins Master_Slave_Stream_v2_0_0/s00_axis_aclk] [get_bd_pins axi_dma_0/m_axi_s2mm_aclk] [get_bd_pins axi_dma_0/s_axi_lite_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_gpio_1/s_axi_aclk] [get_bd_pins axi_gpio_10/s_axi_aclk] [get_bd_pins axi_gpio_11/s_axi_aclk] [get_bd_pins axi_gpio_12/s_axi_aclk] [get_bd_pins axi_gpio_13/s_axi_aclk] [get_bd_pins axi_gpio_14/s_axi_aclk] [get_bd_pins axi_gpio_15/s_axi_aclk] [get_bd_pins axi_gpio_16/s_axi_aclk] [get_bd_pins axi_gpio_17/s_axi_aclk] [get_bd_pins axi_gpio_18/s_axi_aclk] [get_bd_pins axi_gpio_19/s_axi_aclk] [get_bd_pins axi_gpio_2/s_axi_aclk] [get_bd_pins axi_gpio_20/s_axi_aclk] [get_bd_pins axi_gpio_3/s_axi_aclk] [get_bd_pins axi_gpio_4/s_axi_aclk] [get_bd_pins axi_gpio_5/s_axi_aclk] [get_bd_pins axi_gpio_6/s_axi_aclk] [get_bd_pins axi_gpio_7/s_axi_aclk] [get_bd_pins axi_gpio_8/s_axi_aclk] [get_bd_pins axi_gpio_9/s_axi_aclk] [get_bd_pins axi_mem_intercon/ACLK] [get_bd_pins axi_mem_intercon/M00_ACLK] [get_bd_pins axi_mem_intercon/S00_ACLK] [get_bd_pins c_shift_ram_6/CLK] [get_bd_pins c_shift_ram_7/CLK] [get_bd_pins c_shift_ram_8/CLK] [get_bd_pins c_shift_ram_9/CLK] [get_bd_pins fit_timer_0/Clk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins processing_system7_0/S_AXI_HP0_ACLK] [get_bd_pins processing_system7_0_axi_periph/ACLK] [get_bd_pins processing_system7_0_axi_periph/M00_ACLK] [get_bd_pins processing_system7_0_axi_periph/M01_ACLK] [get_bd_pins processing_system7_0_axi_periph/M02_ACLK] [get_bd_pins processing_system7_0_axi_periph/M03_ACLK] [get_bd_pins processing_system7_0_axi_periph/M04_ACLK] [get_bd_pins processing_system7_0_axi_periph/M05_ACLK] [get_bd_pins processing_system7_0_axi_periph/M06_ACLK] [get_bd_pins processing_system7_0_axi_periph/M07_ACLK] [get_bd_pins processing_system7_0_axi_periph/M08_ACLK] [get_bd_pins processing_system7_0_axi_periph/M09_ACLK] [get_bd_pins processing_system7_0_axi_periph/M10_ACLK] [get_bd_pins processing_system7_0_axi_periph/M11_ACLK] [get_bd_pins processing_system7_0_axi_periph/M12_ACLK] [get_bd_pins processing_system7_0_axi_periph/M13_ACLK] [get_bd_pins processing_system7_0_axi_periph/M14_ACLK] [get_bd_pins processing_system7_0_axi_periph/M15_ACLK] [get_bd_pins processing_system7_0_axi_periph/M16_ACLK] [get_bd_pins processing_system7_0_axi_periph/M17_ACLK] [get_bd_pins processing_system7_0_axi_periph/M18_ACLK] [get_bd_pins processing_system7_0_axi_periph/M19_ACLK] [get_bd_pins processing_system7_0_axi_periph/M20_ACLK] [get_bd_pins processing_system7_0_axi_periph/M21_ACLK] [get_bd_pins processing_system7_0_axi_periph/S00_ACLK] [get_bd_pins rst_processing_system7_0_100M/slowest_sync_clk]
+  connect_bd_net -net processing_system7_0_FCLK_CLK1 [get_bd_pins DFF_Integrator_0/timer_clk] [get_bd_pins processing_system7_0/FCLK_CLK1]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins rst_processing_system7_0_100M/ext_reset_in]
   connect_bd_net -net readout_0_dout [get_bd_pins MUX6_0/E] [get_bd_pins readout_0/dout]
   connect_bd_net -net readout_0_en_a [get_bd_pins AA_IntegratorV3_0/rden] [get_bd_pins readout_0/en_a]
@@ -840,12 +847,12 @@ CONFIG.CONST_VAL {0} \
   connect_bd_net -net readout_0_en_l [get_bd_pins LPF_Integrator_0/rden] [get_bd_pins readout_0/en_l]
   connect_bd_net -net readout_0_we [get_bd_pins MUX6_0/EN_E] [get_bd_pins readout_0/we]
   connect_bd_net -net rst_processing_system7_0_100M_interconnect_aresetn [get_bd_pins axi_mem_intercon/ARESETN] [get_bd_pins processing_system7_0_axi_periph/ARESETN] [get_bd_pins rst_processing_system7_0_100M/interconnect_aresetn]
-  connect_bd_net -net rst_processing_system7_0_100M_peripheral_aresetn [get_bd_pins Master_Slave_Stream_v1_0_0/m00_axis_aresetn] [get_bd_pins Master_Slave_Stream_v1_0_0/s00_axis_aresetn] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_gpio_1/s_axi_aresetn] [get_bd_pins axi_gpio_10/s_axi_aresetn] [get_bd_pins axi_gpio_11/s_axi_aresetn] [get_bd_pins axi_gpio_12/s_axi_aresetn] [get_bd_pins axi_gpio_13/s_axi_aresetn] [get_bd_pins axi_gpio_14/s_axi_aresetn] [get_bd_pins axi_gpio_15/s_axi_aresetn] [get_bd_pins axi_gpio_16/s_axi_aresetn] [get_bd_pins axi_gpio_17/s_axi_aresetn] [get_bd_pins axi_gpio_18/s_axi_aresetn] [get_bd_pins axi_gpio_19/s_axi_aresetn] [get_bd_pins axi_gpio_2/s_axi_aresetn] [get_bd_pins axi_gpio_3/s_axi_aresetn] [get_bd_pins axi_gpio_4/s_axi_aresetn] [get_bd_pins axi_gpio_5/s_axi_aresetn] [get_bd_pins axi_gpio_6/s_axi_aresetn] [get_bd_pins axi_gpio_7/s_axi_aresetn] [get_bd_pins axi_gpio_8/s_axi_aresetn] [get_bd_pins axi_gpio_9/s_axi_aresetn] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins fit_timer_0/Rst] [get_bd_pins processing_system7_0_axi_periph/M00_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M01_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M02_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M03_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M04_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M05_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M06_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M07_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M08_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M09_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M10_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M11_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M12_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M13_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M14_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M15_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M16_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M17_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M18_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M19_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M20_ARESETN] [get_bd_pins processing_system7_0_axi_periph/S00_ARESETN] [get_bd_pins rst_processing_system7_0_100M/peripheral_aresetn]
+  connect_bd_net -net rst_processing_system7_0_100M_peripheral_aresetn [get_bd_pins Master_Slave_Stream_v2_0_0/m00_axis_aresetn] [get_bd_pins Master_Slave_Stream_v2_0_0/s00_axis_aresetn] [get_bd_pins axi_dma_0/axi_resetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_gpio_1/s_axi_aresetn] [get_bd_pins axi_gpio_10/s_axi_aresetn] [get_bd_pins axi_gpio_11/s_axi_aresetn] [get_bd_pins axi_gpio_12/s_axi_aresetn] [get_bd_pins axi_gpio_13/s_axi_aresetn] [get_bd_pins axi_gpio_14/s_axi_aresetn] [get_bd_pins axi_gpio_15/s_axi_aresetn] [get_bd_pins axi_gpio_16/s_axi_aresetn] [get_bd_pins axi_gpio_17/s_axi_aresetn] [get_bd_pins axi_gpio_18/s_axi_aresetn] [get_bd_pins axi_gpio_19/s_axi_aresetn] [get_bd_pins axi_gpio_2/s_axi_aresetn] [get_bd_pins axi_gpio_20/s_axi_aresetn] [get_bd_pins axi_gpio_3/s_axi_aresetn] [get_bd_pins axi_gpio_4/s_axi_aresetn] [get_bd_pins axi_gpio_5/s_axi_aresetn] [get_bd_pins axi_gpio_6/s_axi_aresetn] [get_bd_pins axi_gpio_7/s_axi_aresetn] [get_bd_pins axi_gpio_8/s_axi_aresetn] [get_bd_pins axi_gpio_9/s_axi_aresetn] [get_bd_pins axi_mem_intercon/M00_ARESETN] [get_bd_pins axi_mem_intercon/S00_ARESETN] [get_bd_pins fit_timer_0/Rst] [get_bd_pins processing_system7_0_axi_periph/M00_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M01_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M02_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M03_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M04_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M05_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M06_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M07_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M08_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M09_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M10_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M11_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M12_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M13_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M14_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M15_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M16_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M17_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M18_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M19_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M20_ARESETN] [get_bd_pins processing_system7_0_axi_periph/M21_ARESETN] [get_bd_pins processing_system7_0_axi_periph/S00_ARESETN] [get_bd_pins rst_processing_system7_0_100M/peripheral_aresetn]
   connect_bd_net -net util_vector_logic_0_Res [get_bd_pins util_vector_logic_0/Res] [get_bd_pins xlconcat_1/In1]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins processing_system7_0/IRQ_F2P] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconcat_1_dout [get_bd_pins Trigger_0/AAvg] [get_bd_pins xlconcat_1/dout]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins capture_0/cntrl_bits] [get_bd_pins xlconstant_0/dout]
-  connect_bd_net -net xlconstant_1_dout [get_bd_pins Master_Slave_Stream_v1_0_0/Axi_En] [get_bd_pins xlconstant_1/dout]
+  connect_bd_net -net xlconstant_1_dout [get_bd_pins Master_Slave_Stream_v2_0_0/Axi_En] [get_bd_pins xlconstant_1/dout]
 
   # Create address segments
   create_bd_addr_seg -range 0x40000000 -offset 0x0 [get_bd_addr_spaces axi_dma_0/Data_S2MM] [get_bd_addr_segs processing_system7_0/S_AXI_HP0/HP0_DDR_LOWOCM] SEG_processing_system7_0_HP0_DDR_LOWOCM
@@ -862,6 +869,7 @@ CONFIG.CONST_VAL {0} \
   create_bd_addr_seg -range 0x10000 -offset 0x412A0000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_18/S_AXI/Reg] SEG_axi_gpio_18_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x41330000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_19/S_AXI/Reg] SEG_axi_gpio_19_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x41210000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_1/S_AXI/Reg] SEG_axi_gpio_1_Reg
+  create_bd_addr_seg -range 0x10000 -offset 0x41340000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_20/S_AXI/Reg] SEG_axi_gpio_20_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x412B0000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_2/S_AXI/Reg] SEG_axi_gpio_2_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x412C0000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_3/S_AXI/Reg] SEG_axi_gpio_3_Reg
   create_bd_addr_seg -range 0x10000 -offset 0x412D0000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_gpio_4/S_AXI/Reg] SEG_axi_gpio_4_Reg
@@ -875,175 +883,178 @@ CONFIG.CONST_VAL {0} \
   regenerate_bd_layout -layout_string {
    guistr: "# # String gsaved with Nlview 6.5.5  2015-06-26 bk=1.3371 VDI=38 GEI=35 GUI=JA:1.6
 #  -string -flagsOSRD
-preplace port DDR -pg 1 -y 1900 -defaultsOSRD
-preplace port clkin_p -pg 1 -y 2310 -defaultsOSRD
-preplace port TTL_In -pg 1 -y 2490 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -y 1920 -defaultsOSRD
-preplace port clkin_n -pg 1 -y 2330 -defaultsOSRD
-preplace portBus din_n -pg 1 -y 2390 -defaultsOSRD
-preplace portBus din_p -pg 1 -y 2370 -defaultsOSRD
-preplace inst Trigger_0 -pg 1 -lvl 6 -y 2380 -defaultsOSRD
-preplace inst c_shift_ram_4 -pg 1 -lvl 7 -y 2310 -defaultsOSRD
-preplace inst axi_gpio_10 -pg 1 -lvl 13 -y 1920 -defaultsOSRD
-preplace inst axi_gpio_8 -pg 1 -lvl 13 -y 680 -defaultsOSRD
-preplace inst MUX6_0 -pg 1 -lvl 10 -y 2320 -defaultsOSRD
-preplace inst c_shift_ram_5 -pg 1 -lvl 7 -y 2440 -defaultsOSRD
-preplace inst axi_gpio_11 -pg 1 -lvl 13 -y 1440 -defaultsOSRD
-preplace inst axi_gpio_9 -pg 1 -lvl 13 -y 2420 -defaultsOSRD
-preplace inst axi_dma_0 -pg 1 -lvl 13 -y 2250 -defaultsOSRD
-preplace inst TriggerV2_0 -pg 1 -lvl 6 -y 1880 -defaultsOSRD
-preplace inst LPF_Integrator_0 -pg 1 -lvl 8 -y 2250 -defaultsOSRD
-preplace inst xlconstant_0 -pg 1 -lvl 1 -y 2440 -defaultsOSRD
-preplace inst rst_processing_system7_0_100M -pg 1 -lvl 11 -y 1960 -defaultsOSRD
-preplace inst gater_0 -pg 1 -lvl 11 -y 2420 -defaultsOSRD
-preplace inst c_shift_ram_6 -pg 1 -lvl 7 -y 1430 -defaultsOSRD
-preplace inst axi_gpio_12 -pg 1 -lvl 13 -y 810 -defaultsOSRD
-preplace inst AA_IntegratorV3_0 -pg 1 -lvl 8 -y 1580 -defaultsOSRD
-preplace inst xlconstant_1 -pg 1 -lvl 11 -y 2550 -defaultsOSRD
-preplace inst capture_0 -pg 1 -lvl 2 -y 2350 -defaultsOSRD
-preplace inst c_shift_ram_7 -pg 1 -lvl 7 -y 1550 -defaultsOSRD
-preplace inst axi_gpio_13 -pg 1 -lvl 13 -y 940 -defaultsOSRD
-preplace inst fit_timer_0 -pg 1 -lvl 13 -y 2080 -defaultsOSRD
-preplace inst c_shift_ram_8 -pg 1 -lvl 7 -y 1670 -defaultsOSRD
-preplace inst axi_gpio_14 -pg 1 -lvl 13 -y 2560 -defaultsOSRD
-preplace inst util_vector_logic_0 -pg 1 -lvl 4 -y 2460 -defaultsOSRD
-preplace inst xlconcat_0 -pg 1 -lvl 14 -y 2070 -defaultsOSRD
-preplace inst mult_gen_0 -pg 1 -lvl 5 -y 2190 -defaultsOSRD
-preplace inst c_shift_ram_9 -pg 1 -lvl 7 -y 1770 -defaultsOSRD
-preplace inst axi_gpio_15 -pg 1 -lvl 13 -y 440 -defaultsOSRD
-preplace inst axi_gpio_0 -pg 1 -lvl 13 -y 1060 -defaultsOSRD
-preplace inst xlconcat_1 -pg 1 -lvl 5 -y 2400 -defaultsOSRD
-preplace inst mult_gen_1 -pg 1 -lvl 5 -y 2080 -defaultsOSRD
-preplace inst c_counter_binary_0 -pg 1 -lvl 7 -y 1880 -defaultsOSRD
-preplace inst axi_gpio_16 -pg 1 -lvl 13 -y 2850 -defaultsOSRD
-preplace inst axi_gpio_1 -pg 1 -lvl 13 -y 1180 -defaultsOSRD
-preplace inst one_shot_0 -pg 1 -lvl 3 -y 2550 -defaultsOSRD
-preplace inst axi_gpio_17 -pg 1 -lvl 13 -y 2990 -defaultsOSRD
-preplace inst axi_gpio_2 -pg 1 -lvl 13 -y 1300 -defaultsOSRD
-preplace inst readout_0 -pg 1 -lvl 9 -y 1970 -defaultsOSRD
+preplace port DDR -pg 1 -y 2080 -defaultsOSRD
+preplace port clkin_p -pg 1 -y 2420 -defaultsOSRD
+preplace port TTL_In -pg 1 -y 1890 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -y 2100 -defaultsOSRD
+preplace port clkin_n -pg 1 -y 2440 -defaultsOSRD
+preplace portBus din_n -pg 1 -y 2500 -defaultsOSRD
+preplace portBus din_p -pg 1 -y 2480 -defaultsOSRD
+preplace inst axi_gpio_8 -pg 1 -lvl 13 -y 960 -defaultsOSRD
+preplace inst axi_gpio_10 -pg 1 -lvl 13 -y 2110 -defaultsOSRD
+preplace inst Trigger_0 -pg 1 -lvl 6 -y 2280 -defaultsOSRD
+preplace inst c_shift_ram_4 -pg 1 -lvl 7 -y 2460 -defaultsOSRD
+preplace inst MUX6_0 -pg 1 -lvl 10 -y 2340 -defaultsOSRD
+preplace inst axi_gpio_9 -pg 1 -lvl 13 -y 1770 -defaultsOSRD
+preplace inst axi_gpio_11 -pg 1 -lvl 13 -y 1220 -defaultsOSRD
+preplace inst c_shift_ram_5 -pg 1 -lvl 7 -y 2330 -defaultsOSRD
+preplace inst axi_dma_0 -pg 1 -lvl 13 -y 2290 -defaultsOSRD
+preplace inst TriggerV2_0 -pg 1 -lvl 6 -y 1960 -defaultsOSRD
+preplace inst rst_processing_system7_0_100M -pg 1 -lvl 11 -y 2290 -defaultsOSRD
+preplace inst axi_gpio_12 -pg 1 -lvl 13 -y 1920 -defaultsOSRD
+preplace inst AA_IntegratorV3_0 -pg 1 -lvl 8 -y 1530 -defaultsOSRD
+preplace inst LPF_Integrator_0 -pg 1 -lvl 8 -y 1870 -defaultsOSRD
+preplace inst xlconstant_0 -pg 1 -lvl 1 -y 2550 -defaultsOSRD
+preplace inst gater_0 -pg 1 -lvl 11 -y 2460 -defaultsOSRD
+preplace inst c_shift_ram_6 -pg 1 -lvl 7 -y 1530 -defaultsOSRD
+preplace inst axi_gpio_13 -pg 1 -lvl 13 -y 1340 -defaultsOSRD
+preplace inst xlconstant_1 -pg 1 -lvl 11 -y 2620 -defaultsOSRD
+preplace inst capture_0 -pg 1 -lvl 2 -y 2460 -defaultsOSRD
+preplace inst c_shift_ram_7 -pg 1 -lvl 7 -y 1650 -defaultsOSRD
+preplace inst axi_gpio_14 -pg 1 -lvl 13 -y 2570 -defaultsOSRD
+preplace inst fit_timer_0 -pg 1 -lvl 13 -y 2420 -defaultsOSRD
+preplace inst c_shift_ram_8 -pg 1 -lvl 7 -y 1770 -defaultsOSRD
+preplace inst axi_gpio_15 -pg 1 -lvl 13 -y 1490 -defaultsOSRD
+preplace inst axi_gpio_0 -pg 1 -lvl 13 -y 480 -defaultsOSRD
+preplace inst xlconcat_0 -pg 1 -lvl 14 -y 2350 -defaultsOSRD
+preplace inst util_vector_logic_0 -pg 1 -lvl 4 -y 2330 -defaultsOSRD
+preplace inst mult_gen_0 -pg 1 -lvl 5 -y 1960 -defaultsOSRD
+preplace inst c_shift_ram_9 -pg 1 -lvl 5 -y 2500 -defaultsOSRD
+preplace inst axi_gpio_1 -pg 1 -lvl 13 -y 600 -defaultsOSRD
+preplace inst axi_gpio_16 -pg 1 -lvl 13 -y 2860 -defaultsOSRD
+preplace inst xlconcat_1 -pg 1 -lvl 5 -y 2310 -defaultsOSRD
+preplace inst mult_gen_1 -pg 1 -lvl 5 -y 1820 -defaultsOSRD
+preplace inst c_counter_binary_0 -pg 1 -lvl 7 -y 1890 -defaultsOSRD
+preplace inst axi_gpio_2 -pg 1 -lvl 13 -y 720 -defaultsOSRD
+preplace inst axi_gpio_17 -pg 1 -lvl 13 -y 3160 -defaultsOSRD
+preplace inst one_shot_0 -pg 1 -lvl 3 -y 2330 -defaultsOSRD
+preplace inst axi_gpio_3 -pg 1 -lvl 13 -y 1630 -defaultsOSRD
 preplace inst axi_gpio_18 -pg 1 -lvl 13 -y 2710 -defaultsOSRD
-preplace inst axi_gpio_3 -pg 1 -lvl 13 -y 1740 -defaultsOSRD
-preplace inst c_shift_ram_0 -pg 1 -lvl 7 -y 1970 -defaultsOSRD
-preplace inst axi_gpio_19 -pg 1 -lvl 13 -y 1590 -defaultsOSRD
+preplace inst readout_0 -pg 1 -lvl 9 -y 2120 -defaultsOSRD
 preplace inst axi_gpio_4 -pg 1 -lvl 13 -y 60 -defaultsOSRD
-preplace inst Master_Slave_Stream_v1_0_0 -pg 1 -lvl 12 -y 2460 -defaultsOSRD
-preplace inst DFF_Integrator_0 -pg 1 -lvl 8 -y 1880 -defaultsOSRD
-preplace inst c_shift_ram_1 -pg 1 -lvl 7 -y 2210 -defaultsOSRD
-preplace inst axi_gpio_5 -pg 1 -lvl 13 -y 180 -defaultsOSRD
-preplace inst lpf_0 -pg 1 -lvl 6 -y 2110 -defaultsOSRD
-preplace inst c_shift_ram_2 -pg 1 -lvl 9 -y 2420 -defaultsOSRD
-preplace inst axi_mem_intercon -pg 1 -lvl 14 -y 2290 -defaultsOSRD
-preplace inst axi_gpio_6 -pg 1 -lvl 13 -y 300 -defaultsOSRD
-preplace inst AA_0 -pg 1 -lvl 4 -y 2350 -defaultsOSRD
-preplace inst processing_system7_0_axi_periph -pg 1 -lvl 12 -y 1240 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 15 -y 1990 -defaultsOSRD
-preplace inst c_shift_ram_3 -pg 1 -lvl 7 -y 2110 -defaultsOSRD
-preplace inst axi_gpio_7 -pg 1 -lvl 13 -y 560 -defaultsOSRD
-preplace inst DFF_0 -pg 1 -lvl 6 -y 2240 -defaultsOSRD
-preplace netloc axi_gpio_6_gpio_io_o 1 7 7 1570 2430 NJ 2160 NJ 2160 NJ 2160 NJ 2160 NJ 2160 3720
-preplace netloc axi_gpio_14_gpio_io_o 1 9 5 2160 2630 NJ 2630 NJ 2630 NJ 2630 3640
-preplace netloc processing_system7_0_axi_periph_M08_AXI 1 12 1 3170
+preplace inst axi_gpio_19 -pg 1 -lvl 13 -y 1080 -defaultsOSRD
+preplace inst DFF_Integrator_0 -pg 1 -lvl 8 -y 2160 -defaultsOSRD
+preplace inst c_shift_ram_0 -pg 1 -lvl 7 -y 2180 -defaultsOSRD
+preplace inst axi_gpio_5 -pg 1 -lvl 13 -y 200 -defaultsOSRD
+preplace inst c_shift_ram_1 -pg 1 -lvl 7 -y 2080 -defaultsOSRD
+preplace inst axi_gpio_20 -pg 1 -lvl 13 -y 3010 -defaultsOSRD
+preplace inst Master_Slave_Stream_v2_0_0 -pg 1 -lvl 12 -y 2670 -defaultsOSRD
+preplace inst axi_gpio_6 -pg 1 -lvl 13 -y 340 -defaultsOSRD
+preplace inst lpf_0 -pg 1 -lvl 6 -y 1810 -defaultsOSRD
+preplace inst c_shift_ram_2 -pg 1 -lvl 9 -y 2290 -defaultsOSRD
+preplace inst axi_mem_intercon -pg 1 -lvl 14 -y 2150 -defaultsOSRD
+preplace inst AA_0 -pg 1 -lvl 4 -y 2480 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 15 -y 2170 -defaultsOSRD
+preplace inst axi_gpio_7 -pg 1 -lvl 13 -y 840 -defaultsOSRD
+preplace inst processing_system7_0_axi_periph -pg 1 -lvl 12 -y 1250 -defaultsOSRD
+preplace inst c_shift_ram_3 -pg 1 -lvl 7 -y 1980 -defaultsOSRD
+preplace inst DFF_0 -pg 1 -lvl 6 -y 2100 -defaultsOSRD
+preplace netloc axi_gpio_6_gpio_io_o 1 7 7 1620 410 NJ 410 NJ 410 NJ 410 NJ 410 NJ 410 3680
+preplace netloc axi_gpio_14_gpio_io_o 1 9 5 2180 2560 NJ 2560 NJ 2500 NJ 2500 3650
+preplace netloc processing_system7_0_axi_periph_M08_AXI 1 12 1 3220
+preplace netloc c_shift_ram_0_Q 1 7 3 1490 2380 NJ 2380 NJ
 preplace netloc util_vector_logic_0_Res 1 4 1 730
-preplace netloc c_shift_ram_0_Q 1 7 3 1500 2060 NJ 2070 2130
 preplace netloc processing_system7_0_FIXED_IO 1 15 1 NJ
-preplace netloc processing_system7_0_axi_periph_M17_AXI 1 12 1 3180
-preplace netloc axi_gpio_1_gpio_io_o 1 6 8 1240 1490 NJ 1420 NJ 1420 NJ 1420 NJ 1420 NJ 1770 NJ 1510 3650
-preplace netloc DFF_Integrator_1_dout 1 8 1 1850
-preplace netloc fit_timer_0_Interrupt 1 13 1 N
+preplace netloc processing_system7_0_axi_periph_M17_AXI 1 12 1 3220
+preplace netloc axi_gpio_1_gpio_io_o 1 6 8 1250 1590 NJ 1690 NJ 1690 NJ 1690 NJ 1690 NJ 1810 NJ 1560 3690
+preplace netloc fit_timer_0_Interrupt 1 13 1 3740
+preplace netloc AA_IntegratorV3_1_dout 1 8 1 1900
 preplace netloc xlconcat_1_dout 1 5 1 N
-preplace netloc clkin_p_1 1 0 2 NJ 2310 NJ
-preplace netloc MUX6_0_dout 1 10 2 NJ 2340 2740
-preplace netloc LPF_Integrator_1_wrcnt 1 8 6 NJ 2100 NJ 2100 NJ 2070 NJ 2070 NJ 2020 3710
-preplace netloc xlconcat_0_dout 1 14 1 4100
-preplace netloc axi_gpio_3_gpio_io_o 1 6 8 1240 1830 NJ 1760 NJ 1810 NJ 1810 NJ 1810 NJ 1810 NJ 1810 3640
-preplace netloc axi_gpio_18_gpio_io_o 1 1 13 150 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 NJ 2780 3640
-preplace netloc processing_system7_0_axi_periph_M18_AXI 1 12 1 3160
-preplace netloc axi_gpio_9_gpio_io_o 1 6 8 1240 2510 NJ 2510 NJ 2510 NJ 2510 NJ 2500 NJ 2300 NJ 2490 3640
-preplace netloc processing_system7_0_axi_periph_M16_AXI 1 12 1 3210
-preplace netloc mult_gen_0_P 1 5 1 930
-preplace netloc AA_IntegratorV3_0_rdcnt 1 8 6 NJ 1790 NJ 1790 NJ 1790 NJ 1790 NJ 1660 3640
-preplace netloc processing_system7_0_axi_periph_M06_AXI 1 12 1 3150
-preplace netloc Trigger_1_dout 1 6 3 NJ 2370 NJ 2450 1920
+preplace netloc clkin_p_1 1 0 2 NJ 2420 NJ
+preplace netloc MUX6_0_dout 1 10 2 NJ 2380 2770
+preplace netloc LPF_Integrator_1_wrcnt 1 8 6 NJ 1850 NJ 1850 NJ 1850 NJ 1850 NJ 1850 3650
+preplace netloc xlconcat_0_dout 1 14 1 4060
+preplace netloc axi_gpio_3_gpio_io_o 1 4 10 730 2440 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2550 NJ 2490 NJ 2490 3690
+preplace netloc axi_gpio_18_gpio_io_o 1 1 13 150 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2570 NJ 2510 NJ 2640 3650
+preplace netloc processing_system7_0_axi_periph_M18_AXI 1 12 1 3190
+preplace netloc axi_gpio_9_gpio_io_o 1 6 8 1250 1830 NJ 1710 NJ 1840 NJ 1840 NJ 1840 NJ 1840 NJ 1840 3650
+preplace netloc processing_system7_0_axi_periph_M16_AXI 1 12 1 3170
+preplace netloc mult_gen_0_P 1 5 1 910
+preplace netloc processing_system7_0_axi_periph_M06_AXI 1 12 1 3180
+preplace netloc Trigger_1_dout 1 6 3 NJ 2260 NJ 2330 1930
+preplace netloc Master_Slave_Stream_v2_0_1_m00_axis 1 12 1 3320
 preplace netloc processing_system7_0_DDR 1 15 1 NJ
-preplace netloc MUX6_0_logic_out 1 10 2 NJ 2300 2750
-preplace netloc c_counter_binary_0_Q 1 7 1 1480
-preplace netloc axi_gpio_17_gpio_io_o 1 11 3 2830 3060 NJ 3060 3640
-preplace netloc c_shift_ram_7_Q 1 7 1 1420
-preplace netloc LPF_Integrator_1_dout 1 8 1 1860
-preplace netloc din_n_1 1 0 2 NJ 2390 NJ
-preplace netloc lpf_0_dout 1 6 1 1200
-preplace netloc capture_0_clkout 1 2 10 380 2330 520 2270 720 2260 950 2030 1210 2050 1520 2050 1890 2210 2140 2480 2390 2600 NJ
-preplace netloc AA_IntegratorV3_0_wrcnt 1 8 6 NJ 1550 NJ 1550 NJ 1550 NJ 1780 NJ 1520 3640
-preplace netloc Trigger_0_event_done 1 6 5 1230 2500 NJ 2500 NJ 2500 NJ 2500 2370
-preplace netloc axi_gpio_10_gpio_io_o 1 5 9 970 2000 NJ 2030 NJ 2030 NJ 1860 NJ 1860 NJ 1860 NJ 1990 NJ 1990 3640
+preplace netloc MUX6_0_logic_out 1 10 2 2400 2670 NJ
+preplace netloc c_counter_binary_0_Q 1 7 1 1510
+preplace netloc axi_gpio_17_gpio_io_o 1 11 3 2850 3090 NJ 3090 3650
+preplace netloc c_shift_ram_7_Q 1 7 1 1430
+preplace netloc LPF_Integrator_1_dout 1 8 1 1870
+preplace netloc din_n_1 1 0 2 NJ 2500 NJ
+preplace netloc lpf_0_dout 1 6 1 1240
+preplace netloc capture_0_clkout 1 2 10 370 2390 520 2040 710 2040 930 2180 1240 2240 1550 2340 1910 2360 2160 2500 2440 2680 NJ
+preplace netloc Trigger_0_event_done 1 6 5 1200 2530 NJ 2530 NJ 2530 NJ 2530 2420
+preplace netloc axi_gpio_10_gpio_io_o 1 5 9 950 2540 NJ 2540 NJ 2540 NJ 2540 NJ 2540 NJ 2540 NJ 2480 NJ 2480 3650
 preplace netloc xlconstant_1_dout 1 11 1 NJ
-preplace netloc processing_system7_0_axi_periph_M05_AXI 1 12 1 3130
-preplace netloc axi_gpio_16_gpio_io_o 1 11 3 2820 2920 NJ 2920 3640
-preplace netloc readout_0_en_a 1 7 3 1570 1740 NJ 1740 2120
-preplace netloc processing_system7_0_axi_periph_M20_AXI 1 12 1 3220
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 10 6 2360 2060 NJ 2010 NJ 2010 NJ 2010 NJ 2150 4540
-preplace netloc axi_gpio_15_gpio_io_o 1 8 6 1910 370 NJ 370 NJ 370 NJ 370 NJ 370 3650
-preplace netloc c_shift_ram_4_Q 1 7 1 1460
-preplace netloc processing_system7_0_axi_periph_M10_AXI 1 12 1 3240
-preplace netloc processing_system7_0_axi_periph_M03_AXI 1 12 1 3300
-preplace netloc processing_system7_0_axi_periph_M02_AXI 1 12 1 3180
-preplace netloc readout_0_en_d 1 7 3 1550 2000 NJ 1830 2110
-preplace netloc processing_system7_0_axi_periph_M07_AXI 1 12 1 3160
-preplace netloc readout_0_dout 1 9 1 2120
-preplace netloc lpf_0_L_n1 1 4 3 730 2010 NJ 2010 1200
-preplace netloc c_shift_ram_2_Q 1 9 1 2150
-preplace netloc din_p_1 1 0 2 NJ 2370 NJ
-preplace netloc mult_gen_1_P 1 5 1 940
-preplace netloc processing_system7_0_axi_periph_M09_AXI 1 12 1 3200
-preplace netloc Trigger_0_we 1 6 4 NJ 2380 1430 2090 NJ 2110 2150
-preplace netloc capture_0_dout 1 2 2 NJ 2370 540
-preplace netloc processing_system7_0_axi_periph_M11_AXI 1 12 1 3270
-preplace netloc c_shift_ram_9_Q 1 7 1 1470
-preplace netloc processing_system7_0_axi_periph_M13_AXI 1 12 1 3220
-preplace netloc axi_dma_0_M_AXI_S2MM 1 13 1 N
-preplace netloc processing_system7_0_axi_periph_M19_AXI 1 12 1 3170
-preplace netloc one_shot_0_Q 1 3 5 530 2530 NJ 2530 NJ 2530 NJ 2530 1510
-preplace netloc processing_system7_0_axi_periph_M12_AXI 1 12 1 3280
-preplace netloc processing_system7_0_axi_periph_M01_AXI 1 12 1 3180
-preplace netloc capture_0_load 1 2 4 NJ 2350 530 2280 NJ 2280 960
-preplace netloc gater_0_rst 1 11 1 2720
-preplace netloc readout_0_en_l 1 7 3 1570 2070 NJ 2080 2100
-preplace netloc processing_system7_0_FCLK_CLK0 1 6 10 1230 2040 NJ 2040 NJ 1870 NJ 1870 2360 1870 2760 2620 3250 2640 3760 2130 4120 2130 4560
-preplace netloc clkin_n_1 1 0 2 NJ 2330 NJ
-preplace netloc processing_system7_0_FCLK_CLK1 1 7 9 1540 2080 NJ 2090 NJ 2050 NJ 2050 NJ 2000 NJ 2000 NJ 2000 NJ 2140 4550
-preplace netloc memReset_0_rst 1 7 4 1440 2490 NJ 2490 NJ 2490 2380
-preplace netloc rst_processing_system7_0_100M_interconnect_aresetn 1 11 3 2810 2290 NJ 2340 NJ
-preplace netloc processing_system7_0_axi_periph_M00_AXI 1 12 1 3140
-preplace netloc c_shift_ram_8_Q 1 7 1 1420
-preplace netloc axi_gpio_7_gpio_io_o 1 7 7 1560 2010 NJ 1840 NJ 1840 NJ 1840 NJ 1830 NJ 1830 3700
-preplace netloc MUX6_0_en_integration 1 10 1 2360
-preplace netloc one_shot_0_Qn 1 3 5 540 2540 NJ 2540 NJ 2540 NJ 2540 1540
-preplace netloc readout_0_we 1 9 1 2160
-preplace netloc axi_gpio_5_gpio_io_o 1 7 7 1560 2420 NJ 2150 NJ 2150 NJ 2150 NJ 2150 NJ 2150 3730
-preplace netloc AA_0_dout 1 4 3 730 2270 920 1960 NJ
-preplace netloc c_shift_ram_1_Q 1 7 3 1530 2480 NJ 2480 NJ
-preplace netloc DFF_Integrator_1_wrcnt 1 8 6 NJ 1820 NJ 1820 NJ 1820 NJ 1820 NJ 1820 3680
-preplace netloc processing_system7_0_axi_periph_M14_AXI 1 12 1 3230
-preplace netloc lpf_0_CE_O 1 4 3 740 2020 NJ 2020 1190
-preplace netloc axi_gpio_4_gpio_io_o 1 7 7 1550 2410 NJ 2140 NJ 2140 NJ 2140 NJ 2140 NJ 2140 3740
-preplace netloc AA_IntegratorV3_0_dout 1 8 1 1860
-preplace netloc Master_Slave_Stream_v1_0_0_m00_axis 1 12 1 3320
-preplace netloc TTL_In_1 1 0 8 NJ 2490 NJ 2490 370 2490 NJ 2520 NJ 2520 NJ 2520 NJ 2520 1490
-preplace netloc DFF_0_dout 1 6 1 1240
+preplace netloc processing_system7_0_axi_periph_M05_AXI 1 12 1 3150
+preplace netloc axi_gpio_16_gpio_io_o 1 11 3 2840 2930 NJ 2930 3650
+preplace netloc readout_0_en_a 1 7 3 1630 2030 NJ 1980 2110
+preplace netloc processing_system7_0_axi_periph_M21_AXI 1 12 1 3160
+preplace netloc processing_system7_0_axi_periph_M20_AXI 1 12 1 3260
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 10 6 2440 2200 NJ 2200 NJ 2200 NJ 2290 NJ 2330 4490
+preplace netloc axi_gpio_15_gpio_io_o 1 8 6 1930 2020 NJ 2020 NJ 2020 NJ 2020 NJ 2020 3670
+preplace netloc c_shift_ram_4_Q 1 7 1 1480
+preplace netloc processing_system7_0_axi_periph_M10_AXI 1 12 1 3180
+preplace netloc processing_system7_0_axi_periph_M03_AXI 1 12 1 3210
+preplace netloc processing_system7_0_axi_periph_M02_AXI 1 12 1 3190
+preplace netloc readout_0_en_d 1 7 3 1610 2310 NJ 2220 2110
+preplace netloc processing_system7_0_axi_periph_M07_AXI 1 12 1 3200
+preplace netloc readout_0_dout 1 9 1 2140
+preplace netloc lpf_0_L_n1 1 4 3 730 1730 NJ 1730 1190
+preplace netloc c_shift_ram_2_Q 1 9 1 2130
+preplace netloc din_p_1 1 0 2 NJ 2480 NJ
+preplace netloc mult_gen_1_P 1 5 1 N
+preplace netloc processing_system7_0_axi_periph_M09_AXI 1 12 1 3230
+preplace netloc Trigger_0_we 1 6 4 NJ 2270 1530 2370 NJ 2370 2150
+preplace netloc capture_0_dout 1 2 2 NJ 2480 N
+preplace netloc processing_system7_0_axi_periph_M11_AXI 1 12 1 3280
+preplace netloc Master_Slave_Stream_v2_0_0_wrcount 1 12 2 3150 2790 3660
+preplace netloc c_shift_ram_9_Q 1 5 3 940 2200 NJ 2250 1500
+preplace netloc processing_system7_0_axi_periph_M13_AXI 1 12 1 3270
+preplace netloc axi_dma_0_M_AXI_S2MM 1 13 1 3700
+preplace netloc processing_system7_0_axi_periph_M19_AXI 1 12 1 3210
+preplace netloc one_shot_0_Q 1 3 5 530 2390 NJ 2390 NJ 2390 NJ 2390 1560
+preplace netloc processing_system7_0_axi_periph_M12_AXI 1 12 1 3270
+preplace netloc processing_system7_0_axi_periph_M01_AXI 1 12 1 3170
+preplace netloc capture_0_load 1 2 4 NJ 2460 510 2410 NJ 2410 920
+preplace netloc AA_IntegratorV3_1_rdcnt 1 8 6 1900 710 NJ 710 NJ 710 NJ 710 NJ 1150 3650
+preplace netloc gater_0_rst 1 11 1 2760
+preplace netloc readout_0_en_l 1 7 3 1590 2350 NJ 2350 2120
+preplace netloc processing_system7_0_FCLK_CLK0 1 4 12 730 2560 NJ 2560 1220 2520 NJ 2520 NJ 2520 NJ 2520 2410 2690 2800 2220 3240 2780 3730 2270 4070 2310 4510
+preplace netloc clkin_n_1 1 0 2 NJ 2440 NJ
+preplace netloc processing_system7_0_FCLK_CLK1 1 7 9 1600 2320 NJ 2230 NJ 2180 NJ 2190 NJ 2190 NJ 2190 NJ 2280 NJ 2320 4500
+preplace netloc memReset_0_rst 1 7 4 1450 2510 NJ 2510 NJ 2510 NJ
+preplace netloc rst_processing_system7_0_100M_interconnect_aresetn 1 11 3 2760 2040 NJ 2040 NJ
+preplace netloc processing_system7_0_axi_periph_M00_AXI 1 12 1 3290
+preplace netloc c_shift_ram_8_Q 1 7 1 1460
+preplace netloc axi_gpio_7_gpio_io_o 1 7 7 1620 2290 NJ 2000 NJ 2000 NJ 2000 NJ 2000 NJ 2000 3740
+preplace netloc MUX6_0_en_integration 1 10 1 2390
+preplace netloc AA_IntegratorV3_1_wrcnt 1 8 6 NJ 1670 NJ 1670 NJ 1670 NJ 1790 NJ 1410 3650
+preplace netloc readout_0_we 1 9 1 2180
+preplace netloc one_shot_0_Qn 1 3 5 510 2400 NJ 2400 NJ 2400 NJ 2400 1570
+preplace netloc axi_gpio_5_gpio_io_o 1 7 7 1610 270 NJ 270 NJ 270 NJ 270 NJ 270 NJ 270 3680
+preplace netloc AA_0_dout 1 4 3 720 2050 940 2170 NJ
+preplace netloc c_shift_ram_1_Q 1 7 3 1470 2410 NJ 2410 NJ
+preplace netloc processing_system7_0_axi_periph_M14_AXI 1 12 1 N
+preplace netloc lpf_0_CE_O 1 4 3 730 2030 NJ 2030 1190
+preplace netloc axi_gpio_4_gpio_io_o 1 7 7 1600 130 NJ 130 NJ 130 NJ 130 NJ 130 NJ 130 3680
+preplace netloc TTL_In_1 1 0 8 NJ 1890 NJ 1890 370 1890 NJ 1890 NJ 1890 NJ 1890 NJ 1840 NJ
+preplace netloc DFF_0_dout 1 6 1 1230
+preplace netloc DFF_Integrator_0_dout 1 8 1 1850
 preplace netloc xlconstant_0_dout 1 1 1 NJ
-preplace netloc axi_mem_intercon_M00_AXI 1 14 1 4090
-preplace netloc axi_gpio_0_gpio_io_o 1 6 8 1240 1370 NJ 1370 NJ 1370 NJ 1370 NJ 1370 NJ 1760 NJ 1370 3660
-preplace netloc axi_gpio_8_gpio_io_o 1 7 7 1570 2020 NJ 1850 NJ 1850 NJ 1850 NJ 1840 NJ 1840 3690
-preplace netloc axi_dma_0_s2mm_introut 1 13 1 3750
-preplace netloc processing_system7_0_axi_periph_M15_AXI 1 12 1 3200
-preplace netloc processing_system7_0_axi_periph_M04_AXI 1 12 1 3290
-preplace netloc rst_processing_system7_0_100M_peripheral_aresetn 1 11 3 2780 2170 3260 2350 3780
-preplace netloc axi_gpio_2_gpio_io_o 1 6 8 1240 1610 NJ 1750 NJ 1800 NJ 1800 NJ 1800 NJ 1800 NJ 1670 3670
+preplace netloc axi_mem_intercon_M00_AXI 1 14 1 N
+preplace netloc axi_gpio_0_gpio_io_o 1 6 8 1220 1470 NJ 1680 NJ 1680 NJ 1680 NJ 1680 NJ 1800 NJ 1420 3700
+preplace netloc axi_gpio_8_gpio_io_o 1 7 7 1630 2300 NJ 2010 NJ 2010 NJ 2010 NJ 2010 NJ 2010 3730
+preplace netloc DFF_Integrator_0_wrcnt 1 8 6 NJ 1990 NJ 1990 NJ 1990 NJ 1990 NJ 1990 3660
+preplace netloc axi_dma_0_s2mm_introut 1 13 1 3710
+preplace netloc processing_system7_0_axi_periph_M15_AXI 1 12 1 3230
+preplace netloc processing_system7_0_axi_periph_M04_AXI 1 12 1 3310
+preplace netloc rst_processing_system7_0_100M_peripheral_aresetn 1 11 3 2820 2230 3250 2180 3740
+preplace netloc axi_gpio_2_gpio_io_o 1 6 8 1250 1710 NJ 1700 NJ 1700 NJ 1700 NJ 1700 NJ 1820 NJ 1700 3680
 preplace netloc TriggerV2_0_we 1 6 1 NJ
-preplace netloc c_shift_ram_6_Q 1 7 1 1510
-preplace netloc S00_AXI_1 1 11 5 2830 1850 NJ 1850 NJ 1850 NJ 1850 4560
-preplace netloc c_shift_ram_3_Q 1 7 3 1450 2440 NJ 2360 NJ
-levelinfo -pg 1 0 80 260 450 630 830 1080 1330 1680 2010 2260 2560 2980 3480 3930 4330 4580 -top 0 -bot 3070
+preplace netloc c_shift_ram_6_Q 1 7 1 1440
+preplace netloc S00_AXI_1 1 11 5 2850 2030 NJ 2030 NJ 2030 NJ 2030 4510
+preplace netloc c_shift_ram_3_Q 1 7 3 1580 2390 NJ 2390 NJ
+levelinfo -pg 1 0 80 260 440 620 820 1070 1340 1740 2020 2280 2600 3000 3490 3890 4280 4530 -top 0 -bot 3230
 ",
 }
 
