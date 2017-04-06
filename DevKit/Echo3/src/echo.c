@@ -62,12 +62,13 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 	if(g_menuSel == 9)	//if we want to transfer data, come here
 	{
 		int dat;
-		int dram_addr;
+		int dram_addr = 0;
 		int dram_base = 0xa000000;
 		int dram_ceiling = 0xa004000;
-		int len,blen,a;
-		int i,k;
-		char data[8192], data2[8192] ;
+		int len,a;
+		//int i,k;
+		char data[8192] = "";
+		//char data2[8192];
 		char buffer[6];
 
 		a = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how full the bram buffer is
@@ -79,29 +80,30 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 				Xil_Out32(XPAR_AXI_DMA_0_BASEADDR + 0x58, 65536);
 				sleep(1);
 				dram_base = 0xa000000;
-				//dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR);		//Read the value of the write pointer
+				dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) + dram_base;		//Read the value of the write pointer
+				//xil_printf("c: %d", dram_ceiling);
 				txcomplete = 0;
 				break;
 			case 4:
 				switch(transferWFType){
-					case 0:
-						dram_base = 0xa000000;
-						dram_ceiling = 0xa004000;
-						break;
-					case 1:
-						dram_base = 0xa004004;
-						dram_ceiling = 0xa008004;
-						break;
-					case 2:
-						dram_base = 0xa008008;
-						dram_ceiling = 0xa00c008;
-						break;
-					default:
-						txcomplete = 0;
-						g_menuSel = 101;	//indicates transferWFType is messed up
-						return ERR_OK;
-						break;
-					}
+				case 0:
+					dram_base = 0xa000000;
+					dram_ceiling = 0xa004000;
+					break;
+				case 1:
+					dram_base = 0xa004004;
+					dram_ceiling = 0xa008004;
+					break;
+				case 2:
+					dram_base = 0xa008008;
+					dram_ceiling = 0xa00c008;
+					break;
+				default:
+					txcomplete = 0;
+					g_menuSel = 101;	//indicates transferWFType is messed up
+					return ERR_OK;
+					break;
+				}
 				Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);
 				Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
 				Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
@@ -132,111 +134,51 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 			transferWFType += 1;
 			if(transferWFType == 3)
 				transferWFType = 0;
-/*			if (a == 4095)
-			{
-				if(transferWFType == 0){					//for AA waveforms
-					dram_base = 0xa000000;		//167772160
-					dram_cieling = 0xa004000;	//167788544
-				}
-				if(transferWFType == 1){					//for LPF waveforms
-					dram_base = 0xa004004;		//167788548
-					dram_cieling = 0xa008004;	//167804932
-				}
-				if(transferWFType == 2){					//for DFF waveforms
-					dram_base = 0xa008008;
-					dram_cieling = 0xa00c008;
-				}
-
-				if(mode == 4)					//for processed data
-				{
-					if(transferWFType == 0)
-					{
-						// the statements below are the same as in DAQ()
-						Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);
-						Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
-						Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
-						sleep(1); 			// Built in Latency ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 1 s
-						Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 0);
-
-						//the statements below are the same as ClearBuffers()
-						Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
-						sleep(1);						// Built in Latency ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 1 s
-						Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
-					}
-				}
-				else
-				{
-					//Xil_DCacheInvalidateRange(0xa000000, 65536);
-					txcomplete = 0;
-				}
-
-				Xil_DCacheInvalidateRange(0xa000000, 65536);
-				for (dram_addr = dram_base;	dram_addr <= dram_cieling; dram_addr+=4)
-				{
-					dat = Xil_In32(dram_addr);
-					//dat = i;
-					//len = strlen(data);
-					//sprintf(data + len, "%d", dat);
-					sprintf(data, "%d", dat);
-					strcat(data,"\r\n");
-					len = strlen(data);
-//					if(dram_addr == dram_cieling){
-//						k = 1;
-//					}
-					err = tcp_write(tpcb, (void*)data, len,0x01);
-				}
-
-				transferWFType += 1;	//controls which type of waveform we get
-				if(transferWFType == 3)	//start over at AA waveforms again
-				{
-					transferWFType = 0;
-				}
-			}*/
-		return ERR_OK;
-
-		}
-		else	//Otherwise come here for the polling loop
-		{
-			/* do not read the packet if we are not in ESTABLISHED state */
-			char * buffer;//sam
-			int iVal = 0;//sam
-
-			if (!p) {
-				tcp_close(tpcb);
-				tcp_recv(tpcb, NULL);
-				return ERR_OK;
-			}
-
-			/* indicate that the packet has been received */
-			tcp_recved(tpcb, p->len);
-
-			buffer = (char*) malloc(p->len);//sam
-			memcpy(buffer,p->payload,p->len);//sam
-
-			if((p->len) < 8)	//check that the packet is int size or less
-			{
-				sscanf(buffer,"%d",&iVal);	//read one int from buffer into the address of iVal
-				g_menuSel = iVal;			//save the value to send back to main
-			}
-			else
-			{
-				iVal = 99999;	//indicate that we didn't read a value from the buffer
-			}
-
-			/* echo back the payload */
-			/* in this case, we assume that the payload is < TCP_SND_BUF */
-			if (tcp_sndbuf(tpcb) > p->len) {
-				err = tcp_write(tpcb, p->payload, p->len, 1);
-				//err = tcp_write(tpcb, 0x1, p->len, 1);
-			} else
-				xil_printf("no space in tcp_sndbuf\n\r");
-
-			/* free the received pbuf */
-			pbuf_free(p);
 
 			return ERR_OK;
-		}//eoelse
-	}//eoifgmenusel
+		}
+	}
+	else	//Otherwise come here for the polling loop
+	{
+		/* do not read the packet if we are not in ESTABLISHED state */
+		char * buffer;//sam
+		int iVal = 0;//sam
+
+		if (!p) {
+			tcp_close(tpcb);
+			tcp_recv(tpcb, NULL);
+			return ERR_OK;
+		}
+
+		/* indicate that the packet has been received */
+		tcp_recved(tpcb, p->len);
+
+		buffer = (char*) malloc(p->len);//sam
+		memcpy(buffer,p->payload,p->len);//sam
+
+		if((p->len) < 8)	//check that the packet is int size or less
+		{
+			sscanf(buffer,"%d",&iVal);	//read one int from buffer into the address of iVal
+			g_menuSel = iVal;			//save the value to send back to main
+		}
+		else
+		{
+			iVal = 99999;	//indicate that we didn't read a value from the buffer
+		}
+
+		/* echo back the payload */
+		/* in this case, we assume that the payload is < TCP_SND_BUF */
+		if (tcp_sndbuf(tpcb) > p->len) {
+			err = tcp_write(tpcb, p->payload, p->len, 1);
+			//err = tcp_write(tpcb, 0x1, p->len, 1);
+		} else
+			xil_printf("no space in tcp_sndbuf\n\r");
+
+		/* free the received pbuf */
+		pbuf_free(p);
+
+		return ERR_OK;
+	}//eoelse
 }
 
 err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
