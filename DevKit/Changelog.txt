@@ -1,0 +1,6 @@
+Version 2.00 	- Fixed basic errors and started the code at Version 2.00 to give a place to start the versioning. 
+ + I'm still unsure how to assign version numbers to the software; I need to think about this more. In this version of the software, all the code pertaining to the SINGR devkit and gui have been committed, along with some instructions. 
+
+Version 2.01	- Cleaned up the github repo a lot; untracked many files; fixed looping problem by adding code (which got deleted) that initialized the system. Changed the format of echo.c so that it prints out waveform data of any type over the ethernet connection. Sam added GPIO_20 which gives the size of the "write pointer" for the WF buffer. This gives us how many bytes to send over the ethernet; previously the system printed out the entire 16k bytes of the buffer. 
+ + This is tested on Graham's computer; needs verification on lab setup.
+ + tested on board uZ C1618
