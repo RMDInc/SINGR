@@ -179,16 +179,16 @@ int Client::Recv(int intArray[12291], int placeInArray)		//bool Recv() need to p
 			{
 				mystring += var;				// Otherwise save the char onto the end of a string
 			}
-			if ( arrayIndex == 12291 )
+/*			if ( arrayIndex == 12291 )
 			{
 				output_file_3 << "-----" << endl;
 				output_file_3.close();
 				delete [] pmsg;
 				pmsg = nullptr;
 				return arrayIndex;
-			}
+			} */
 		}
-		output_file_3.close();
+//		output_file_3.close();
 		delete [] pmsg;
 		pmsg = nullptr;
 		return arrayIndex;

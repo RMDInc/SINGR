@@ -74,15 +74,15 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 		a = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how full the bram buffer is
 		if(a==4095)	//buffer is full
 		{
-			switch(mode){
+			switch(g_mode){
 			case 0: case 1: case 2:		//Any WF choice comes here
 				Xil_Out32(XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
 				Xil_Out32(XPAR_AXI_DMA_0_BASEADDR + 0x58, 65536);
 				sleep(1);
 				dram_base = 0xa000000;
-				dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) + dram_base;		//Read the value of the write pointer
+				dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) + 4 * dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
 				//xil_printf("c: %d", dram_ceiling);
-				txcomplete = 0;
+				g_txcomplete = 0;
 				break;
 			case 4:
 				switch(transferWFType){
@@ -99,7 +99,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 					dram_ceiling = 0xa00c008;
 					break;
 				default:
-					txcomplete = 0;
+					g_txcomplete = 0;
 					g_menuSel = 101;	//indicates transferWFType is messed up
 					return ERR_OK;
 					break;
@@ -115,7 +115,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 				Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
 				break;
 			default:
-				txcomplete = 0;
+				g_txcomplete = 0;
 				g_menuSel = 102;	//indicates mode is incorrect
 				return ERR_OK;
 				break;

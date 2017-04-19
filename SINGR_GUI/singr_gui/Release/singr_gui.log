@@ -1,12 +1,4 @@
-﻿  stdafx.cpp
-  AssemblyInfo.cpp
-  captureWaveform.cpp
-  changeAxesPopUp.cpp
-  clientExample.cpp
+﻿  clientExample.cpp
 clientExample.cpp(150): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
           c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\include\string.h(188) : see declaration of 'strncpy'
-  setCutsPopUp.cpp
-  singr_gui.cpp
-  Generating Code...
-  .NETFramework,Version=v4.0.AssemblyAttributes.cpp
-  singr_gui.vcxproj -> K:\users\GStoddard\SINGR GUI\singr_gui_og\Release\singr_gui.exe
+  singr_gui.vcxproj -> C:\Users\GStoddard\Documents\GitHub\SINGR\SINGR_GUI\Release\singr_gui.exe

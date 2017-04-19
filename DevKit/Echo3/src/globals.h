@@ -8,7 +8,7 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
 
-int txcomplete;
-int mode;
+int g_txcomplete;
+int g_mode;
 
 #endif /* GLOBALS_H_ */

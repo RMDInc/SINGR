@@ -31,6 +31,7 @@ namespace singr_gui {
 		Form1(void)
 		{
 			InitializeComponent();
+			psdCapRun = false;
 			//findPorts();
 			//
 			//TODO: Add the constructor code here
@@ -94,6 +95,7 @@ namespace singr_gui {
 			}
 		}
 	private: System::Windows::Forms::Button^  b_CapturePSD;
+	private: bool psdCapRun;
 	protected: 
 
 		
@@ -668,9 +670,9 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 			// as will code for connecting to the comm port.				 	
 				std::string msg;
 				std::string msgstop;
-				continueLooping = true;
-				Client client("172.30.0.10");
+				psdCapRun = !psdCapRun;	//flip the boolean value each time the button is clicked
 
+				Client client("172.30.0.10");
 				if ( !client.Start()) {				
 					this->tb_updates->Text = "Client start failed";				
 					return;
@@ -700,10 +702,8 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 				int runCounter(0);
 				bool doPSD(true);
 				int iESpectrumArray[1000] = {};
-				//int * iESpectrumArray = new int[1000] = {};
 				int iESpectrumArrayIndex(0);
 				int iFOMArray[100] = {};
-				//int * iFOMArray = new int[100] = {};
 				int iFOMArrayIndex(0);
 
 				/* Determine the number of samples, based on what is in textboxes */
@@ -751,127 +751,93 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 				int * msgInt(nullptr);		//declare a pointer and initialize it to null
 				msgInt = new int[12300];	//dynamically allocate the array of integers
 				//memset(&msgInt, 0, sizeof(msgInt));	//initialize all the values
-
-				while(placeInArray < 12291)	// Fill the buffer before proceeding
-				{
-					msg = "a";	
-					client.Send(msg.c_str());	// Send a message to the server
-					this->tb_updates->Text = "Filling the array = " + placeInArray;
-					Sleep(2000);
-
-					placeInArray = client.Recv(msgInt, placeInArray);			// Fills msgInt, then sorts into array of ints, returns how full array is
-				}
-
-				if ( placeInArray == 12291 )	// Buffer is full, process and save it
-				{									
-					this->tb_updates->Text = "Sorting and saving the array. ";
-					check = client.SortPrint(msgInt);	// Sort and save array to file
-					if ( check != 0 )
-					{
-						if ( check = 2 ){
-							this->tb_updates->Text = "j or k ran away";
-							client.Stop();
-							Application::DoEvents();
-							return;
-						}
-						this->tb_updates->Text = "Could not open file.";
-						client.Stop();
-						return;				
-					}					
-					placeInArray = 0;					 				
-
-					/* compute the value of PSD for the data set and put it into chart 1 */
-					int arrayval(0);
-					int ii(0);
-					double bl1(0.0);
-					double bl2(0.0);
-					double bl3(0.0);
-					double bl4(0.0);
-					double bl_avg(0.0);
-					double si(0.0);
-					double fi(0.0);
-					double li(0.0);
-					double psd(0.0);
-					double energy(0.0);
-
-					/* This while loops calculates the PSD and energy values, then plots them on ch_PSD */
-					while(doPSD == true)
-					{						
-						if(ii >= 12291){doPSD = false; continue;}
-						arrayval = msgInt[ii];							
-						switch (arrayval)
-						{
-						case 111111:	// grab the si, li, fi data to calculate psd and energy							
-							bl4 = bl3;
-							bl3 = bl2;
-							bl2 = bl1;
-							bl1 = static_cast<double>(msgInt[ii+4]) / (16 * iBaselineSamples);	//  running baseline calculation
-							if(bl4 == 0)
-								bl_avg = (msgInt[ii+4] / ( 16 * iBaselineSamples )); //until we have 4 baselines saved, use the regular calculation
-							else							
-								bl_avg = (bl1+bl2+bl3+bl4) / 4.0;
-
-							si = static_cast<double>(msgInt[ii+5]) / 16.0 - (bl_avg * iShortSamples);
-							li = static_cast<double>(msgInt[ii+6]) / 16.0 - (bl_avg * iLongSamples);
-							fi = static_cast<double>(msgInt[ii+7]) / 16.0 - (bl_avg * iFullSamples);
-							psd = si / (li - si);
-							energy = 1.0 * li + 0.0;
-							
-							/* Add data to the PSD chart */
-							if ((psd < 2 && psd > 0) && (energy < 200000 && energy > 0))
-							{
-								this->ch_PSD->Series["Series1"]->Points->AddXY(fi, psd);
-							}
-							/* Add data to the Energy Spectrum chart */
-							iESpectrumArrayIndex = static_cast<int>(energy / dESpectrumBinSize);
-							if(iESpectrumArrayIndex > 999 || iESpectrumArrayIndex < 0)
-							{
-								//do nothing with the event, it's outside the bins we have
-							}
-							else
-							{
-								++iESpectrumArray[iESpectrumArrayIndex];
-							}
-							/* Add data to the PSD chart */
-							iFOMArrayIndex = static_cast<int>(psd / dFOMBinSize);
-							if(iFOMArrayIndex > 99 || iFOMArrayIndex < 0)
-							{
-								//again, do nothing
-							}
-							else
-							{
-								++iFOMArray[iFOMArrayIndex];
-							}
-
-							this->ch_ESpectrum->Series["Series1"]->Points->Clear();
-							for(int i = 0; i < 999; i++)
-							{
-								dESpectrumBin = dESpectrumBinSize * (i + 0.5);	// shift the marker so it sits over the bin correctly
-								this->ch_ESpectrum->Series["Series1"]->Points->AddXY(dESpectrumBin, iESpectrumArray[i]);
-							}
-							this->ch_FOM->Series["Series1"]->Points->Clear();
-							for(int j = 0; j < 999; j++)
-							{
-								dFOMBin = dFOMBinSize * (j + 0.5);	// shift the marker so it sits over the bin correctly
-								this->ch_FOM->Series["Series1"]->Points->AddXY(dFOMBin, iFOMArray[j]);
-							}
-
-							ii += 8;					// align the with the next identifier
-							//Application::DoEvents();
-							break;
-						case 121212: case 131313:	// gone too far, stop reading 							
-							doPSD = false;
-							break;
-						default:	// keep iterating to find an identifier							
-							++ii;
-							break;				
-						}
 				
-					}	// End of while(doPSD)			
-				}	// End of if(placeinarray)
+//Place code below here
+				
+				/* Variables and Arrays */
+				msg = "a";
+				int ii(0);
+				int arrayval(0);
+				double bl1(0.0);double bl2(0.0);double bl3(0.0);double bl4(0.0);
+				double bl_avg(0.0);
+				double si(0.0);
+				double li(0.0);
+				double fi(0.0);
+				double psd(0.0);
+				double energy(0.0);
 
+				while(psdCapRun)
+				{			
+					/* Send a message -> Receive data */
+					client.Send(msg.c_str());
+					this->tb_updates->Text = "Receiving data.";
+					Sleep(2000);
+					placeInArray = client.Recv(msgInt, placeInArray);
+
+					/* msgInt now has our ints, loop over them to pull out data */
+					while(doPSD)	//come up with loop condition
+					{
+						arrayval = msgInt[ii];
+						switch(arrayval)
+						{
+							case 111111:
+								bl4 = bl3;
+								bl3 = bl2;
+								bl2 = bl1;
+								bl1 = static_cast<double>(msgInt[ii+3]) / (16 * iBaselineSamples);
+								if(bl4==0.0)
+									bl_avg = (msgInt[ii+3] / (16 * iBaselineSamples));	//until we have 4 BLs, use the regular calculation
+								else
+									bl_avg = (bl4+bl3+bl2+bl1) / 4.0;
+			
+								si = static_cast<double>(msgInt[ii+4]) / 16.0 - (bl_avg * iShortSamples);
+								li = static_cast<double>(msgInt[ii+5]) / 16.0 - (bl_avg * iLongSamples);
+								fi = static_cast<double>(msgInt[ii+6]) / 16.0 - (bl_avg * iFullSamples);
+								psd = si / (li - si);
+								energy = 1.0 * fi + 0.0;
+			
+								/* Add data to the charts */
+								if ((psd > 0 && psd < 2) && (energy > 0 && energy < 200000))			//check if it's within PSD cuts
+								{
+									this->ch_PSD->Series["Series1"]->Points->AddXY(fi, psd);
+								}
+			
+								iESpectrumArrayIndex = static_cast<int>(energy / dESpectrumBinSize);	//Check data is within Energy spectrum bins
+								if (iESpectrumArrayIndex >= 0 && iESpectrumArrayIndex < 1000)
+									++iESpectrumArray[iESpectrumArrayIndex];
+			
+								iFOMArrayIndex = static_cast<int>(psd / dFOMBinSize);					//Check data is within Energy spectrum bins
+								if (iFOMArrayIndex >= 0 && iFOMArrayIndex < 100)
+									++iFOMArray[iFOMArrayIndex];
+			
+								this->ch_ESpectrum->Series["Series1"]->Points->Clear();					//Plot Energy Spectrum data
+								for(int i = 0; i < 999; i++)
+								{
+									dESpectrumBin = dESpectrumBinSize * (i + 0.5);
+									this->ch_ESpectrum->Series["Series1"]->Points->AddXY(dESpectrumBin, iESpectrumArray[i]);
+								}
+			
+								this->ch_FOM->Series["Series1"]->Points->Clear();					//Plot FOM data
+								for(int j = 0; j < 999; j++)
+								{
+									dFOMBin = dFOMBinSize * (j + 0.5);
+									this->ch_FOM->Series["Series1"]->Points->AddXY(dFOMBin, iFOMArray[j]);
+								}
+			
+								ii += 8;	//align with the next identifier
+								break;
+							case 121212: case 131313:	//when we find the next identifier, we break
+								doPSD = false;
+								break;
+							default:
+								++ii;
+								break;
+						}//end of switch
+					}	 //end of doPSD
+				}		 //end of psdCapRun
+//Replace above here
 				/* Check if the user has clicked the 'stop' button */			
-				if ( continueLooping == false )
+				if ( psdCapRun == false )
 				{
 					this->tb_updates->Text = "Stopped. ";
 					client.Stop();

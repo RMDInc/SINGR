@@ -224,7 +224,7 @@ int ProgramSfpPhy(void);
 		for (i=0; i<32; i++ ) { RecvBuffer[i] = '_'; }			// Clear RecvBuffer Variable
 
 		sleep(0.5);  // Built in Latency ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 0.5 s
-		xil_printf("\n\r v2.1 \n\r");
+		xil_printf("\n\r v2.02 \n\r");
 		xil_printf("\n\r MAIN MENU \n\r");
 		xil_printf("******************************\n\r");
 		xil_printf(" 0) Set Mode of Operation\n\r");
@@ -253,7 +253,7 @@ int ProgramSfpPhy(void);
 		switch (menusel) { // Switch-Case Menu Select
 
 		case 0: //Set Mode of Operation
-			mode = 99; //Detector->GetMode();
+			g_mode = 99; //Detector->GetMode();
 			xil_printf("\n\r Waveform Data: \t Enter 0 <return>\n\r");
 			xil_printf(" LPF Waveform Data: \t Enter 1 <return>\n\r");
 			xil_printf(" DFF Waveform Data: \t Enter 2 <return>\n\r");
@@ -261,22 +261,22 @@ int ProgramSfpPhy(void);
 			xil_printf(" Processed Data: \t Enter 4 <return>\n\r");
 
 			readEtherPoll();
-			mode = g_menuSel;
+			g_mode = g_menuSel;
 
-			if (mode < 0 || mode > 4 ) { xil_printf("Invalid Command\n\r"); break; }
+			if (g_mode < 0 || g_mode > 4 ) { xil_printf("Invalid Command\n\r"); break; }
 			// mode = 0, AA waveform
 			// mode = 1, LPF waveform
 			// mode = 2, DFF waveform
 			// mode = 3, TRG waveform
 			// mode = 4, Processed Data
 			//Detector->SetMode(mode);  // Set Mode for Detector
-			Xil_Out32 (XPAR_AXI_GPIO_14_BASEADDR, ((u32)mode));
+			Xil_Out32 (XPAR_AXI_GPIO_14_BASEADDR, ((u32)g_mode));
 			// Register 14
-			if ( mode == 0 ) { xil_printf("Transfer AA Waveforms\n\r"); }
-			if ( mode == 1 ) { xil_printf("Transfer LPF Waveforms\n\r"); }
-			if ( mode == 2 ) { xil_printf("Transfer DFF Waveforms\n\r"); }
-			if ( mode == 3 ) { xil_printf("Transfer TRG Waveforms\n\r"); }
-			if ( mode == 4 ) { xil_printf("Transfer Processed Data\n\r"); }
+			if ( g_mode == 0 ) { xil_printf("Transfer AA Waveforms\n\r"); }
+			if ( g_mode == 1 ) { xil_printf("Transfer LPF Waveforms\n\r"); }
+			if ( g_mode == 2 ) { xil_printf("Transfer DFF Waveforms\n\r"); }
+			if ( g_mode == 3 ) { xil_printf("Transfer TRG Waveforms\n\r"); }
+			if ( g_mode == 4 ) { xil_printf("Transfer Processed Data\n\r"); }
 			sleep(1); 			// Built in Latency ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 1 s
 			break;
 
@@ -693,12 +693,12 @@ int ether(){
 	xil_printf("begin");
 	xil_printf("\r\n");
 	//	a = pbuf_free_ooseq_queued;
-	txcomplete = 1;
-	while (txcomplete == 1) {
+	g_txcomplete = 1;
+	while (g_txcomplete == 1) {
 		sw = XGpioPs_ReadPin(&Gpio, etherStop); //read pin
 
 		if (sw == 1) { //sw=1 when switch is pushed
-			txcomplete = 0; //invert value stored in toggle
+			g_txcomplete = 0; //invert value stored in toggle
 			//continue; //break out and stop looping
 
 		}
