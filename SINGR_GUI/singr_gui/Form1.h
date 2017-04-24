@@ -772,7 +772,7 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 					client.Send(msg.c_str());
 					this->tb_updates->Text = "Receiving data.";
 					Sleep(2000);
-					placeInArray = client.Recv(msgInt, placeInArray);
+					placeInArray = client.Recv(msgInt);
 
 					/* msgInt now has our ints, loop over them to pull out data */
 					while(doPSD)	//come up with loop condition
@@ -885,6 +885,7 @@ private: System::Void b_setTriggerThreshold_Click(System::Object^  sender, Syste
 			 /* Declare variables */
 			 std::string retMessage = "";
 			 std::string chooseMode = "3";
+
 			 const char * strThreshold = "";
 
 			 marshal_context^ context = gcnew marshal_context();

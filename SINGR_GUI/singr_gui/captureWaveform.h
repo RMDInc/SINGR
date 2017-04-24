@@ -315,7 +315,7 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 
 			 /* Variables */
 			 int retVal(0);
-			 int numBytes(0);
+//			 int numBytes(0);
 			 int stopVal(0);
 
 			 int * wfTime(nullptr);
@@ -358,7 +358,7 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 				 getWaveForm.Send(sendByte);
 
 				 /* Pass in a pointer to a buffer and an int to get back the number of bytes written to the buffer */
-				 retVal = getWaveForm.Recv(wfBuff, numBytes);	// retVal gives the number of ints that were written to the buffer
+				 retVal = getWaveForm.Recv(wfBuff);	// retVal gives the number of ints that were written to the buffer
 				 if ( retVal == 0 ) {
 					 this->tbCapWF->Text = "No wf data received.";
 

@@ -132,12 +132,10 @@ bool Client::Send(const char* szMsg)
 };
 
 /* Receive message from server */
-int Client::Recv(int intArray[12291], int placeInArray)		//bool Recv() need to pass in pointer to msgInt array
+int Client::Recv(int * intArray)		//bool Recv() need to pass in pointer to msgInt array
 {   
-	int transferNum(0);
+	int i(0);
 	int iResult(0);
-	int arrayIndex = placeInArray;
-	std::string mystring = "";
 	char * precvBuff(nullptr);
 	precvBuff = new char[DEFAULT_BUFFER_LENGTH];
 		
@@ -145,55 +143,19 @@ int Client::Recv(int intArray[12291], int placeInArray)		//bool Recv() need to p
 
 	if (iResult > 0)
 	{
-		char * pmsg(nullptr);
-		pmsg = new char[DEFAULT_BUFFER_LENGTH];		// msg[65536]
-		strncpy(pmsg, precvBuff, iResult);			// Copy the contents of recvbuf -> msg
-
-		//Print the value of iResult to a file?? that way we see how much is coming in // Don't need this for now
-/*		ofstream output_file_3;
-		output_file_3.open("iResultsizes.txt",ios::app);
-		if(!output_file_3.is_open())
+		std::istringstream iss (precvBuff);
+		for (i = 0; i < 12291; i++)		// Loop to convert a char array to an int array
 		{
-			return 1;
+			iss >> intArray[i];
 		}
-		output_file_3 << "Transfer" << transferNum++ << endl;
-		output_file_3 << iResult << endl;  */
 
 		delete [] precvBuff;
 		precvBuff = nullptr;
-
-		for (int i = 0; i < DEFAULT_BUFFER_LENGTH; ++i)		// Loop to convert a char array to an int array
-		{
-			char var = *(pmsg + i);
-			if (var == 13 && *(pmsg+i+1) == 10)	// If the char and the next one are both empty
-			{
-				*(intArray + arrayIndex) = atoi(mystring.c_str());	// Convert the string to an int and save it to the array
-				mystring = "";
-				++arrayIndex;					// Increment the index of the int arrray
-			}
-			else if ( var == 10 )				// If on the second of the two empty chars, skip it
-			{
-				continue;
-			}
-			else 
-			{
-				mystring += var;				// Otherwise save the char onto the end of a string
-			}
-/*			if ( arrayIndex == 12291 )
-			{
-				output_file_3 << "-----" << endl;
-				output_file_3.close();
-				delete [] pmsg;
-				pmsg = nullptr;
-				return arrayIndex;
-			} */
-		}
-//		output_file_3.close();
-		delete [] pmsg;
-		pmsg = nullptr;
-		return arrayIndex;
+		return i;
 	} 
  
+	delete [] precvBuff;
+	precvBuff = nullptr;
 	return 1;
 }
 

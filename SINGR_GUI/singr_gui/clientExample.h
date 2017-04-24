@@ -3,6 +3,7 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <fstream>
 #include <cctype>
@@ -24,8 +25,7 @@ public:
 	bool Start();
 	void Stop();	// Free the resouces
 	bool Send(const char* szMsg);	// Send message to server
-	int Recv(int intArray[12291], int placeInArray);	// Receive message from server
-														//bool Recv() need to pass in pointer to msgInt array
+	int Recv(int * intArray);	// Receive message from server
 	int SortPrint(int msgInt[12291]);
  
 private:

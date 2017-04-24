@@ -224,7 +224,7 @@ int ProgramSfpPhy(void);
 		for (i=0; i<32; i++ ) { RecvBuffer[i] = '_'; }			// Clear RecvBuffer Variable
 
 		sleep(0.5);  // Built in Latency ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 0.5 s
-		xil_printf("\n\r v2.02 \n\r");
+		xil_printf("\n\r v2.03 \n\r");
 		xil_printf("\n\r MAIN MENU \n\r");
 		xil_printf("******************************\n\r");
 		xil_printf(" 0) Set Mode of Operation\n\r");

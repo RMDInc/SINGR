@@ -80,7 +80,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 				Xil_Out32(XPAR_AXI_DMA_0_BASEADDR + 0x58, 65536);
 				sleep(1);
 				dram_base = 0xa000000;
-				dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) + 4 * dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
+				dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) * 4 + dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
 				//xil_printf("c: %d", dram_ceiling);
 				g_txcomplete = 0;
 				break;
@@ -141,8 +141,8 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 	else	//Otherwise come here for the polling loop
 	{
 		/* do not read the packet if we are not in ESTABLISHED state */
-		char * buffer;//sam
-		int iVal = 0;//sam
+		char * buffer;		//sam
+		char * pEnd;		//gjs
 
 		if (!p) {
 			tcp_close(tpcb);
@@ -153,18 +153,13 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 		/* indicate that the packet has been received */
 		tcp_recved(tpcb, p->len);
 
-		buffer = (char*) malloc(p->len);//sam
-		memcpy(buffer,p->payload,p->len);//sam
+		buffer = (char*) malloc(p->len);	//sam
+		memcpy(buffer,p->payload,p->len);	//sam
 
 		if((p->len) < 8)	//check that the packet is int size or less
-		{
-			sscanf(buffer,"%d",&iVal);	//read one int from buffer into the address of iVal
-			g_menuSel = iVal;			//save the value to send back to main
-		}
+			g_menuSel = strtol(buffer, &pEnd, 10);	//gjs
 		else
-		{
-			iVal = 99999;	//indicate that we didn't read a value from the buffer
-		}
+			g_menuSel = 99999;	//indicate that we didn't read a value from the buffer
 
 		/* echo back the payload */
 		/* in this case, we assume that the payload is < TCP_SND_BUF */
@@ -176,6 +171,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 
 		/* free the received pbuf */
 		pbuf_free(p);
+		free (buffer);
 
 		return ERR_OK;
 	}//eoelse
