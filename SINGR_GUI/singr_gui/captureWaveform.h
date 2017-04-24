@@ -310,18 +310,17 @@ namespace singr_gui {
 				 //Form1->Show();
 			 }
 private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  e) {
-
 			  /* Send commands to the uZ board to send waveforms according to settings displayed */
 
 			 /* Variables */
 			 int retVal(0);
-//			 int numBytes(0);
+			 int numBytes(0);
 			 int stopVal(0);
 
-			 int * wfTime(nullptr);
-			 wfTime = new int[12300];
+			 double * wfTime(nullptr);
+			 wfTime = new double[12300]();
 			 int * wfBuff(nullptr);
-			 wfBuff = new int[12300];
+			 wfBuff = new int[12300]();
 
 			 Client getWaveForm("172.30.0.10");
 
@@ -330,8 +329,6 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 				 Application::DoEvents();
 				 return;
 			 }
-
-			 //this->gb_WFType->findChildren();
 
 			 /* Set up the transaction */
 			 const char * chooseMode = "0";
@@ -359,7 +356,7 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 
 				 /* Pass in a pointer to a buffer and an int to get back the number of bytes written to the buffer */
 				 retVal = getWaveForm.Recv(wfBuff);	// retVal gives the number of ints that were written to the buffer
-				 if ( retVal == 0 ) {
+				 if ( retVal < 2 ) {
 					 this->tbCapWF->Text = "No wf data received.";
 
 					 if(stopVal >=10)
@@ -374,7 +371,7 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 			
 				 /* Create a set of times at 4 ns spacing to plot the wf values against */
 				 for( int ii(0); ii < retVal; ++ii) {
-					 wfTime[ii] = ii * 4;	// Each wf data point is 4 ns apart
+					 wfTime[ii] = ii * 4.0 / 1000.0;	// Each wf data point is 4 ns apart
 				 }
 
 				 /* Plot the points in the chart */
@@ -383,7 +380,7 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 					 this->chartCapWF->Series["Series1"]->Points->AddXY(wfTime[jj], (wfBuff[jj] / 16));
 				 }
 				 Application::DoEvents();
-
+				 break;
 			 }	//End of plot wf while loop
 
 			 /* Disconnect from the client class and clean up our work */

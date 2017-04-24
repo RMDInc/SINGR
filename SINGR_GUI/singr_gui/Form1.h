@@ -79,6 +79,8 @@ namespace singr_gui {
 	private: System::Windows::Forms::TextBox^  tb_threshold;
 
 	private: System::Windows::Forms::Label^  label7;
+	private: System::Windows::Forms::ToolStripMenuItem^  neutronDieAwayToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  openToolStripMenuItem1;
 	public: 
 		// try and declare public variables here
 		static bool continueLooping = true;
@@ -199,6 +201,8 @@ namespace singr_gui {
 			this->label6 = (gcnew System::Windows::Forms::Label());
 			this->tb_threshold = (gcnew System::Windows::Forms::TextBox());
 			this->label7 = (gcnew System::Windows::Forms::Label());
+			this->neutronDieAwayToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->openToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ch_ESpectrum))->BeginInit();
 			this->menuStrip1->SuspendLayout();
@@ -330,8 +334,9 @@ namespace singr_gui {
 			// menuStrip1
 			// 
 			this->menuStrip1->BackColor = System::Drawing::SystemColors::Control;
-			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {this->fileToolStripMenuItem, 
-				this->diagnosticWindowToolStripMenuItem, this->pSDOptionsToolStripMenuItem, this->spectrumOptionsToolStripMenuItem, this->fOMOptionsToolStripMenuItem});
+			this->menuStrip1->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(6) {this->fileToolStripMenuItem, 
+				this->diagnosticWindowToolStripMenuItem, this->pSDOptionsToolStripMenuItem, this->spectrumOptionsToolStripMenuItem, this->fOMOptionsToolStripMenuItem, 
+				this->neutronDieAwayToolStripMenuItem});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(1160, 24);
@@ -614,6 +619,20 @@ namespace singr_gui {
 			this->label7->TabIndex = 32;
 			this->label7->Text = L"Updates:";
 			// 
+			// neutronDieAwayToolStripMenuItem
+			// 
+			this->neutronDieAwayToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->openToolStripMenuItem1});
+			this->neutronDieAwayToolStripMenuItem->Name = L"neutronDieAwayToolStripMenuItem";
+			this->neutronDieAwayToolStripMenuItem->Size = System::Drawing::Size(117, 20);
+			this->neutronDieAwayToolStripMenuItem->Text = L"Neutron Die-Away";
+			// 
+			// openToolStripMenuItem1
+			// 
+			this->openToolStripMenuItem1->Name = L"openToolStripMenuItem1";
+			this->openToolStripMenuItem1->Size = System::Drawing::Size(152, 22);
+			this->openToolStripMenuItem1->Text = L"Open";
+			this->openToolStripMenuItem1->Click += gcnew System::EventHandler(this, &Form1::openToolStripMenuItem1_Click);
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
@@ -749,7 +768,7 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 				dFOMBinSize = dFOMRange / 100.0;	// 100 bins
 				 
 				int * msgInt(nullptr);		//declare a pointer and initialize it to null
-				msgInt = new int[12300];	//dynamically allocate the array of integers
+				msgInt = new int[12300];	//dynamically allocate the array of integers	//how big does this need to be?
 				//memset(&msgInt, 0, sizeof(msgInt));	//initialize all the values
 				
 //Place code below here
@@ -766,6 +785,21 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 				double psd(0.0);
 				double energy(0.0);
 
+				/* Enter Ether mode */
+				std::string strMode = "0";			//choose mode menu
+				std::string enableSystem = "1";		//enable the system
+				std::string strProcessedData = "4";	//choose processed data mode
+				std::string strEther = "9";			//begin
+
+				client.Send((char *)strMode.c_str());
+				Sleep(2000);
+				client.Send((char *)enableSystem.c_str());
+				Sleep(2000);
+				client.Send((char *)strProcessedData.c_str());
+				Sleep(2000);
+				client.Send((char *)strEther.c_str());
+				Sleep(2000);
+
 				while(psdCapRun)
 				{			
 					/* Send a message -> Receive data */
@@ -773,6 +807,11 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 					this->tb_updates->Text = "Receiving data.";
 					Sleep(2000);
 					placeInArray = client.Recv(msgInt);
+
+					if(placeInArray < 2)	//check if we have received any data
+						doPSD = false;
+
+					ii = 0;
 
 					/* msgInt now has our ints, loop over them to pull out data */
 					while(doPSD)	//come up with loop condition
@@ -834,6 +873,7 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 								break;
 						}//end of switch
 					}	 //end of doPSD
+					doPSD = true;
 				}		 //end of psdCapRun
 //Replace above here
 				/* Check if the user has clicked the 'stop' button */			
@@ -1153,6 +1193,9 @@ private: System::Void addCutsOnPSDToolStripMenuItem_Click(System::Object^  sende
 			 }
 		 }//end of set cuts on psd ratio (horizontal lines) 
 
+private: System::Void openToolStripMenuItem1_Click(System::Object^  sender, System::EventArgs^  e) {
+			 //This will open a window to the neutron die-away curve utility
+		 }
 };	// leave semi-colon, closes public ref class Form1, line 25
 }	// eof, closes namespace singr_gui, line 10
 
