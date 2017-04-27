@@ -126,7 +126,8 @@ namespace singr_gui {
 			// chartCapWF
 			// 
 			chartArea1->AxisX->IsStartedFromZero = false;
-			chartArea1->AxisX->Maximum = 10;
+			chartArea1->AxisX->Maximum = 3;
+			chartArea1->AxisX->Minimum = -1;
 			chartArea1->AxisX->Title = L"Time (us)";
 			chartArea1->AxisY->IsStartedFromZero = false;
 			chartArea1->AxisY->Maximum = 2500;
@@ -353,6 +354,7 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 				 /* Send a char to the board to receive a buffer of data */
 				 const char * sendByte = "0";
 				 getWaveForm.Send(sendByte);
+				 Sleep(2000);
 
 				 /* Pass in a pointer to a buffer and an int to get back the number of bytes written to the buffer */
 				 retVal = getWaveForm.Recv(wfBuff);	// retVal gives the number of ints that were written to the buffer

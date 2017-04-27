@@ -762,8 +762,8 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 				/* Determine the domain and set axes for the Energy Spectrum chart */
 				dPSDymin = this->ch_PSD->ChartAreas[0]->AxisY->Minimum;
 				dPSDymax = this->ch_PSD->ChartAreas[0]->AxisY->Maximum;
-				this->ch_FOM->ChartAreas[0]->AxisY->Minimum = dPSDymin;
-				this->ch_FOM->ChartAreas[0]->AxisY->Maximum = dPSDymax;
+				this->ch_FOM->ChartAreas[0]->AxisX->Minimum = dPSDymin;
+				this->ch_FOM->ChartAreas[0]->AxisX->Maximum = dPSDymax;
 				dFOMRange = dPSDymax - dPSDymin;
 				dFOMBinSize = dFOMRange / 100.0;	// 100 bins
 				 
@@ -793,9 +793,9 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 
 				client.Send((char *)strMode.c_str());
 				Sleep(2000);
-				client.Send((char *)enableSystem.c_str());
-				Sleep(2000);
 				client.Send((char *)strProcessedData.c_str());
+				Sleep(2000);
+				client.Send((char *)enableSystem.c_str());
 				Sleep(2000);
 				client.Send((char *)strEther.c_str());
 				Sleep(2000);
