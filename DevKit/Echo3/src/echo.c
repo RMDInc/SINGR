@@ -59,6 +59,35 @@ void print_app_header()
 
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 {
+	char * buffer = NULL;
+	char * pEnd = NULL;
+
+	if (!p)
+	{
+		tcp_close(tpcb);
+		tcp_recv(tpcb, NULL);
+		return ERR_OK;
+	}
+
+	/* indicate that the packet has been received */
+	tcp_recved(tpcb, p->len);
+
+	/* allocate memory for the buffer and initialize it */
+	buffer = (char *) malloc(p->len);
+	memcpy(buffer, "0", 8);
+
+	/* receive the data */
+	memcpy(buffer, p->payload, p->len);
+
+	if(buffer[0] == 'q')	//if the value sent was a 'q', then the user wants to break out of the
+	{						//capturing loop and go back to the main menu
+		g_txcomplete = 0;
+		g_menuSel = 0;
+		free(buffer);
+		free(pEnd);
+		return ERR_OK;
+	}
+
 	if(g_menuSel == 9)	//if we want to transfer data, come here
 	{
 		int dat;
@@ -66,54 +95,56 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 		int dram_base = 0xa000000;
 		int dram_ceiling = 0xa004000;
 		int len = 0;
-		int writePtr = 0;
-		int readPtr = 0;
+		int writePtrAA = 0;
+		int readPtrAA = 0;
+		char cDone[8] = "141414\n";
 		char data[8192] = "";
-		//char buffer[8];
+
+		Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
+		Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
 
 		while(1)
 		{
-			writePtr = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how far we have written into the bram buffer
-			readPtr = Xil_In32 (XPAR_AXI_GPIO_19_BASEADDR);		//checks how far we have read into the buffer
-			if(abs(writePtr - readPtr) >= 4095)	//buffer is full
-			{
+			//writePtr = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how far we have written into the bram buffer
+			//readPtr = Xil_In32 (XPAR_AXI_GPIO_19_BASEADDR);		//checks how far we have read into the buffer
+			//if(abs(writePtr - readPtr) >= 4095)	//buffer is full
+			//{
 				switch(g_mode){
 				case 0: case 1: case 2:		//Any WF choice comes here
-					Xil_Out32(XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
-					Xil_Out32(XPAR_AXI_DMA_0_BASEADDR + 0x58, 65536);
+					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);				//dma transfer
+					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
+					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
 					sleep(1);
-					dram_base = 0xa000000;
-					dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) * 4 + dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
+					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 0);
+
+					while(1)	//test for data; when > 4095, we have a full buffer
+					{
+						dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) * 4 + dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
+						if(dram_ceiling - dram_base > 4095)
+							break;
+					}
 					g_txcomplete = 0;
 					break;
 				case 4:
-					switch(transferWFType){
-					case 0:
-						dram_base = 0xa000000;		// 167772160
-						dram_ceiling = 0xa004000;	// 167788544
-						break;
-					case 1:
-						dram_base = 0xa004004;
-						dram_ceiling = 0xa008004;
-						break;
-					case 2:
-						dram_base = 0xa008008;
-						dram_ceiling = 0xa00c008;
-						break;
-					default:
-						g_txcomplete = 0;
-						g_menuSel = 101;	//indicates transferWFType is messed up
-						return ERR_OK;
-						break;
-					}
+
 					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);
 					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
 					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
 					sleep(1);
 					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 0);
 
+					writePtrAA = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how many ints were written into the bram buffer
+					readPtrAA = Xil_In32 (XPAR_AXI_GPIO_19_BASEADDR);		//checks how far we have read into the buffer (0)
+					if((writePtrAA - readPtrAA) >= 4095)	//tells when the AA integrator has written a full buffer (can be out of sync with other integrators)
+					{
+						//dram_base = 0xa000000;		//167772160
+						//dram_ceiling = 0xa004000;	//167788544
+//						dram_ceiling = 0xa00c008;	//167821320 - 167772160 = 49160 // just get the AA data for now, this is all three buffers
+						sleep(1);
+						break;
+					}
+
 					Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
-					sleep(1);
 					Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
 					break;
 				default:
@@ -126,44 +157,38 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 				for(dram_addr = dram_base; dram_addr <= dram_ceiling; dram_addr+=4)
 				{
 					dat = Xil_In32(dram_addr);
-					sprintf(data, "%d", dat);
-					strcat(data, "\r\n");		// concatenates 2 chars onto the end '\r' and '\n'; adds 2 bits
-					len = strlen(data);
+					sprintf(data, "%d\n", dat);
 
-					uint sendBuff = tcp_sndbuf(tpcb);	//tcp_snd_buff = 256 bytes
-					xil_printf("%d", sendBuff);
-
-					err = tcp_write(tpcb, (void*)data, len, 0x01);
+					err = tcp_write(tpcb, (void*)data, strlen(data), 0x01);
 					if(err != ERR_OK)
 						xil_printf("no space in tcp_snd_buf");
 				}
 
-				transferWFType += 1;
-				if(transferWFType == 3)
-					transferWFType = 0;
+				//put in a "finished" set of bits/bytes at the end to indicate transmission is complete
+				err = tcp_write(tpcb, (void *)cDone, strlen(cDone), 0x01);
 
 				return ERR_OK;
-			}
+			//}
 		}//eowhile(true)
 	}
 	else	//Otherwise come here for the polling loop
 	{
-		/* do not read the packet if we are not in ESTABLISHED state */
-		char * buffer = NULL;		//sam
-		char * pEnd = NULL;			//gjs
-
-		if (!p) {
-			tcp_close(tpcb);
-			tcp_recv(tpcb, NULL);
-			return ERR_OK;
-		}
-
-		/* indicate that the packet has been received */
-		tcp_recved(tpcb, p->len);
-
-		buffer = (char*) malloc(p->len);
-		memcpy(buffer, "0", 8);
-		memcpy(buffer,p->payload,p->len);
+//		/* do not read the packet if we are not in ESTABLISHED state */
+//		char * buffer = NULL;		//sam
+//		char * pEnd = NULL;			//gjs
+//
+//		if (!p) {
+//			tcp_close(tpcb);
+//			tcp_recv(tpcb, NULL);
+//			return ERR_OK;
+//		}
+//
+//		/* indicate that the packet has been received */
+//		tcp_recved(tpcb, p->len);
+//
+//		buffer = (char*) malloc(p->len);
+//		memcpy(buffer, "0", 8);
+//		memcpy(buffer,p->payload,p->len);
 
 		if((p->len) < 9)	//check that the packet is int size or less
 			g_menuSel = strtol(buffer, &pEnd, 10);	//gjs
@@ -173,7 +198,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 		/* echo back the payload */
 		/* in this case, we assume that the payload is < TCP_SND_BUF */
 		if (tcp_sndbuf(tpcb) > p->len) {
-			err = tcp_write(tpcb, p->payload, p->len, 1);
+			//err = tcp_write(tpcb, p->payload, p->len, 1);	//don't echo anything back
 			//err = tcp_write(tpcb, 0x1, p->len, 1);
 		} else
 			xil_printf("no space in tcp_sndbuf\n\r");
@@ -181,6 +206,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 		/* free the received pbuf */
 		pbuf_free(p);
 		free (buffer);
+		//free (pEnd);
 
 		return ERR_OK;
 	}//eoelse
