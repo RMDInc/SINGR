@@ -4,25 +4,25 @@
 
 // Declare structs
 struct corEvt {				// This struct can hold all of the data for a correlated event
-	int aatime;				// aa stands for adjacent average
-	int aatotCount;
-	int aaEventNum;
+	int aaTotalCounts;				// aa stands for adjacent average
+	int aaEventNumber;
 	int aaInt1;
 	int aaInt2;
 	int aaInt3;
 	int aaInt4;
-	int lpfEventNum;		// lpf stands for Low Pass Filter
+	int aaEight;
+	int lpfEventNumber;		// lpf stands for Low Pass Filter
+	int lpfTTLSignal;
 	int lpfInt1;
 	int lpfInt2;
 	int lpfInt3;
-	int lpfSix;
 	int lpfSeven;
 	int lpfEight;
-	int dffEventNum;		// dff stands for Differential filter
+	int dffTimeSmall;		// dff stands for Differential filter
+	int dffTimeBig;
+	int dffEventNumber;
 	int dffInt1;
 	int dffInt2;
-	int dffFive;
-	int dffSix;
 	int dffSeven;
 	int dffEight;
 };
@@ -131,26 +131,64 @@ bool Client::Send(const char* szMsg)
 	return true;
 };
 
+//code between here
+int Client::miniRecv()		//bool Recv() need to pass in pointer to msgInt array
+{   	
+	char miniBuff[4] = {};
+	int iResult = recv(ConnectSocket, miniBuff, 4, 0);	// receive data from the socket
+	return iResult;
+}
+//and here
+
 /* Receive message from server */
 int Client::Recv(int * intArray)		//bool Recv() need to pass in pointer to msgInt array
 {   
 	int i(0);
 	int iResult(0);
+	int iPreviousResult(1);
+	int iRecvd(0);
+	int iLastError(0);
+	int variable_buffsize = 65536;	
+	char cTransferBuff[1000] = "";
+	char cTestBuff[1000] = "";
 	char * precvBuff(nullptr);
-	precvBuff = new char[DEFAULT_BUFFER_LENGTH];
-		
-	iResult = recv(ConnectSocket, precvBuff, DEFAULT_BUFFER_LENGTH, 0);
+	precvBuff = new char[DEFAULT_BUFFER_LENGTH]();
 
-	if (iResult > 0)
+	//just get this working...
+	Sleep(2000);
+
+	while(1)
 	{
-		std::istringstream iss (precvBuff);
-		for (i = 0; i < 12291; i++)		// Loop to convert a char array to an int array
+		iResult = recv(ConnectSocket, cTransferBuff, 1000, 0);	// receive data from the socket
+		if(iResult < 0)											// error checking
+			break;
+		memcpy((precvBuff + iRecvd), cTransferBuff, iResult);	//copy the data from transferbuff to receive buffer
+		memcpy(cTestBuff, cTransferBuff, iResult);
+		iRecvd += iResult;
+		if(iResult < 1000)										//if we got less than 1k bytes, break out
+			break;
+		memset(cTransferBuff, 0, 1000);							//reset the transfer buffer
+		
+	}
+
+	//for(int j = 0; j < 4; j++)	//loop through the Precv buff to see what's there
+	//{
+	//	memcpy(cTestBuff, precvBuff, 1000);
+	//	//memset(cTestBuff, 0, 1000);
+	//}
+
+	if (iRecvd > 0)
+	{
+		std::istringstream iss (precvBuff);	// load buff into stream for reading
+		for (i = 0; i < iRecvd; i++)		// Loop to convert a char array to an int array
 		{
 			iss >> intArray[i];
+			int iwhatsthis = intArray[i];
+			if(intArray[i] == 141414)
+				break;
 		}
 
-		delete [] precvBuff;
-		precvBuff = nullptr;
+		delete [] precvBuff; precvBuff = nullptr;
 		return i;
 	} 
  
@@ -160,12 +198,12 @@ int Client::Recv(int * intArray)		//bool Recv() need to pass in pointer to msgIn
 }
 
 /* Sort and print to file the data from the experiment */	
-int Client::SortPrint(int msgInt[12291])
+int Client::SortPrint(const char * fileName, int * msgInt, int msgIntLen)
 {
 	// Need to sort the data that is now in msgInt	
 	bool loop(true);
 	corEvt * pevtArray(nullptr);
-	pevtArray = new corEvt[512];
+	pevtArray = new corEvt[512]();
 	int j(0);		// loops over ints in msgInt
 	int jj(0);
 	int val;		// holds the int value
@@ -175,35 +213,30 @@ int Client::SortPrint(int msgInt[12291])
 	int check(0);	// check where we exit sorting loop
 	int skips(0);
 
-/*		ofstream output_file_2;
-	output_file_2.open("nosortfiletest.txt",ios::app);
-	if(!output_file_2.is_open())
-	{
-		return 1;
-	}
-		
-	output_file_2 << "----------" << endl;
-
-	while(j<12291)
-	{
-		output_file_2 << msgInt[j] << endl;
-		j++;
-	}
-	output_file_2.close();
-	j = 0; */
-
 	ofstream output_file;
-	output_file.open("datafiletest.txt",ios::app);
+	output_file.open(fileName,ios::app);
 	if ( !output_file.is_open() )
 	{
-		return 1;
+		delete [] pevtArray;
+		pevtArray = nullptr;
+		return 2;
 	}
 
-	while (j < 12291)
+	output_file << "ffffff" << endl;
+
+	//write all our data to the file above
+	for(i = 0; i < msgIntLen; i++)
+	{
+		output_file << msgInt[i] << endl;
+	}
+	i = 0;			//reset i
+	return 414141;	// don't sort atm
+
+	while (j < 12300)
 	{	
-		if(i == 509 && ii == 510 && iii == 510)
+		if(i == 512 && ii == 512 && iii == 512)
 		{
-			j = 12291;
+			j = 12300;
 			continue;
 		}
 		val = msgInt[j];
@@ -211,47 +244,47 @@ int Client::SortPrint(int msgInt[12291])
 		{
 		case 111111:
 			// loop over the values in this event type
-			for(i = 0; i < 510; i++)
+			for(i = 0; i < 512; i++)
 			{
-				if(j >=12291){break;}
-				pevtArray[i].aatime = msgInt[j+1];
-				pevtArray[i].aatotCount = msgInt[j+2];
-				pevtArray[i].aaEventNum = msgInt[j+3];
-				pevtArray[i].aaInt1 = msgInt[j+4];
-				pevtArray[i].aaInt2 = msgInt[j+5];
-				pevtArray[i].aaInt3 = msgInt[j+6];
-				pevtArray[i].aaInt4 = msgInt[j+7];
+				if(j >=12300){break;}
+				pevtArray[i].aaTotalCounts = msgInt[j+1];
+				pevtArray[i].aaEventNumber = msgInt[j+2];
+				pevtArray[i].aaInt1 = msgInt[j+3];
+				pevtArray[i].aaInt2 = msgInt[j+4];
+				pevtArray[i].aaInt3 = msgInt[j+5];
+				pevtArray[i].aaInt4 = msgInt[j+6];
+				pevtArray[i].aaEight = msgInt[j+7];
 				j+=8;
 			}
-			j++;	//Push the j value above the last 111111 ID so it won't come back here
+			//j++;	//Push the j value above the last 111111 ID so it won't come back here
 			break;
 		case 121212:
-			for(ii = 0; ii < 511; ii++, j+=8)
+			for(ii = 0; ii < 512; ii++, j+=8)
 			{
-				if(j >=12291){break;}
-				pevtArray[ii].lpfEventNum = msgInt[j+1];
-				pevtArray[ii].lpfInt1 = msgInt[j+2];
-				pevtArray[ii].lpfInt2 = msgInt[j+3];
-				pevtArray[ii].lpfInt3 = msgInt[j+4];
-				pevtArray[ii].lpfSix = msgInt[j+5];
+				if(j >=12300){break;}
+				pevtArray[ii].lpfEventNumber = msgInt[j+1];
+				pevtArray[ii].lpfTTLSignal = msgInt[j+2];
+				pevtArray[ii].lpfInt1 = msgInt[j+3];
+				pevtArray[ii].lpfInt2 = msgInt[j+4];
+				pevtArray[ii].lpfInt3 = msgInt[j+5];
 				pevtArray[ii].lpfSeven = msgInt[j+6];
 				pevtArray[ii].lpfEight = msgInt[j+7];
 			}
-			j++;	//Again, instead of setting j to another ID value, put it just above that
+			//j++;	//Again, instead of setting j to another ID value, put it just above that
 			break;
 		case 131313:
-			for(iii = 0; iii < 511; iii++, j+=8)
+			for(iii = 0; iii < 512; iii++, j+=8)
 			{
-				if(j >=12291){break;}
-				pevtArray[iii].dffEventNum = msgInt[j+1];
-				pevtArray[iii].dffInt1 = msgInt[j+2];
-				pevtArray[iii].dffInt2 = msgInt[j+3];
-				pevtArray[iii].dffFive = msgInt[j+4];
-				pevtArray[iii].dffSix = msgInt[j+5];
+				if(j >=12300){break;}
+				pevtArray[iii].dffTimeSmall = msgInt[j+1];
+				pevtArray[iii].dffTimeBig = msgInt[j+2];
+				pevtArray[iii].dffEventNumber = msgInt[j+3];
+				pevtArray[iii].dffInt1 = msgInt[j+4];
+				pevtArray[iii].dffInt2 = msgInt[j+5];
 				pevtArray[iii].dffSeven = msgInt[j+6];
 				pevtArray[iii].dffEight = msgInt[j+7];
 			}
-			j++;
+			//j++;
 			break;
 		default:
 			j++;
@@ -260,31 +293,38 @@ int Client::SortPrint(int msgInt[12291])
 		} //End of switch statement
 	} //End of while loop
 		
-	if( j > 12292){check = 1;};
+	if( j > 12300)	//if the index ran away, exit
+	{
+		delete[] pevtArray;
+		pevtArray = nullptr;
+		output_file.close();
+		return 1;
+	}
+
 	// Sorting the values of the int array is finished, print out the struct here
 	if( check == 0 ){
-		for ( jj = 0; jj < 510; ++jj)
+		for ( jj = 0; jj < 512; ++jj)
 		{
-			output_file << setw(3) << ii
-				<< setw(10) << pevtArray[jj].aatime
-				<< setw(10) << pevtArray[jj].aatotCount
-				<< setw(10) << pevtArray[jj].aaEventNum 
+			output_file << setw(3) << jj
+				<< setw(11) << pevtArray[jj].aaTotalCounts
+				<< setw(10) << pevtArray[jj].aaEventNumber
 				<< setw(10) << pevtArray[jj].aaInt1
-				<< setw(10) << pevtArray[jj].aaInt2 
-				<< setw(10) << pevtArray[jj].aaInt3
+				<< setw(10) << pevtArray[jj].aaInt2
+				<< setw(10) << pevtArray[jj].aaInt3 
 				<< setw(10) << pevtArray[jj].aaInt4
-				<< setw(10) << pevtArray[jj].lpfEventNum 
-				<< setw(10) << pevtArray[jj].lpfInt1
-				<< setw(10) << pevtArray[jj].lpfInt2 
+				<< setw(10) << pevtArray[jj].aaEight
+				<< setw(10) << pevtArray[jj].lpfEventNumber 
+				<< setw(10) << pevtArray[jj].lpfTTLSignal
+				<< setw(10) << pevtArray[jj].lpfInt1 
+				<< setw(10) << pevtArray[jj].lpfInt2
 				<< setw(10) << pevtArray[jj].lpfInt3
-				<< setw(10) << pevtArray[jj].lpfSix
 				<< setw(10) << pevtArray[jj].lpfSeven
 				<< setw(10) << pevtArray[jj].lpfEight
-				<< setw(10) << pevtArray[jj].dffEventNum 
+				<< setw(10) << pevtArray[jj].dffTimeSmall 
+				<< setw(10) << pevtArray[jj].dffTimeBig
+				<< setw(10) << pevtArray[jj].dffEventNumber
 				<< setw(10) << pevtArray[jj].dffInt1
-				<< setw(10) << pevtArray[jj].dffInt2 
-				<< setw(10) << pevtArray[jj].dffFive
-				<< setw(10) << pevtArray[jj].dffSix
+				<< setw(10) << pevtArray[jj].dffInt2
 				<< setw(10) << pevtArray[jj].dffSeven
 				<< setw(10) << pevtArray[jj].dffEight << endl;
 		}
@@ -294,5 +334,5 @@ int Client::SortPrint(int msgInt[12291])
 
 	delete [] pevtArray;
 	pevtArray = nullptr;
-	return 0;
+	return 414141;
 }//end of SortPrint	

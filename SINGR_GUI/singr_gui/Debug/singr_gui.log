@@ -1,4 +1,27 @@
-﻿  captureWaveform.cpp
-  singr_gui.cpp
-  Generating Code...
-  singr_gui.vcxproj -> C:\Users\GStoddard\Documents\GitHub\SINGR\SINGR_GUI\Debug\singr_gui.exe
+﻿Build started 5/16/2017 7:53:57 PM.
+     1>Project "C:\Users\gstoddard\Desktop\SINGR-master\SINGR_GUI\singr_gui\singr_gui.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\singr_gui.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+       CoreResGen:
+         No resources are out of date with respect to their source files. Skipping resource generation.
+       ResourceCompile:
+         All outputs are up-to-date.
+       Link:
+         All outputs are up-to-date.
+         singr_gui.vcxproj -> C:\Users\gstoddard\Desktop\SINGR-master\SINGR_GUI\Debug\singr_gui.exe
+       MetaGen:
+       Skipping target "MetaGen" because all output files are up-to-date with respect to the input files.
+       FinalizeBuildStatus:
+         Deleting file "Debug\singr_gui.unsuccessfulbuild".
+         Touching "Debug\singr_gui.lastbuildstate".
+     1>Done Building Project "C:\Users\gstoddard\Desktop\SINGR-master\SINGR_GUI\singr_gui\singr_gui.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.35

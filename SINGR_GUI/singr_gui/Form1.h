@@ -81,6 +81,8 @@ namespace singr_gui {
 	private: System::Windows::Forms::Label^  label7;
 	private: System::Windows::Forms::ToolStripMenuItem^  neutronDieAwayToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  openToolStripMenuItem1;
+	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
+	private: System::ComponentModel::BackgroundWorker^  backgroundWorker1;
 	public: 
 		// try and declare public variables here
 		static bool continueLooping = true;
@@ -98,6 +100,9 @@ namespace singr_gui {
 		}
 	private: System::Windows::Forms::Button^  b_CapturePSD;
 	private: bool psdCapRun;
+	private: ref struct dataForBkgdWorker{
+				 String^ mstrFileName;
+			 };
 	protected: 
 
 		
@@ -121,7 +126,7 @@ namespace singr_gui {
 	private: System::Windows::Forms::Button^  b_saveFile;
 
 
-	private: System::Windows::Forms::FolderBrowserDialog^  folderBrowserDialog1;
+
 	private: System::Windows::Forms::DataVisualization::Charting::Chart^  ch_PSD;
 
 	private: System::Windows::Forms::DataVisualization::Charting::Chart^  ch_ESpectrum;
@@ -164,7 +169,6 @@ namespace singr_gui {
 			this->tb_savefilename = (gcnew System::Windows::Forms::TextBox());
 			this->label2 = (gcnew System::Windows::Forms::Label());
 			this->b_saveFile = (gcnew System::Windows::Forms::Button());
-			this->folderBrowserDialog1 = (gcnew System::Windows::Forms::FolderBrowserDialog());
 			this->ch_PSD = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			this->ch_ESpectrum = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
@@ -185,6 +189,8 @@ namespace singr_gui {
 			this->changeAxesToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->clearChartToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->addCutsOnEnergyToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->neutronDieAwayToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->openToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->ch_FOM = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			this->chk_stf = (gcnew System::Windows::Forms::CheckBox());
 			this->chk_atf = (gcnew System::Windows::Forms::CheckBox());
@@ -201,8 +207,8 @@ namespace singr_gui {
 			this->label6 = (gcnew System::Windows::Forms::Label());
 			this->tb_threshold = (gcnew System::Windows::Forms::TextBox());
 			this->label7 = (gcnew System::Windows::Forms::Label());
-			this->neutronDieAwayToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->openToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
+			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ch_ESpectrum))->BeginInit();
 			this->menuStrip1->SuspendLayout();
@@ -211,7 +217,7 @@ namespace singr_gui {
 			// 
 			// b_CapturePSD
 			// 
-			this->b_CapturePSD->Location = System::Drawing::Point(1023, 418);
+			this->b_CapturePSD->Location = System::Drawing::Point(1023, 404);
 			this->b_CapturePSD->Name = L"b_CapturePSD";
 			this->b_CapturePSD->Size = System::Drawing::Size(125, 42);
 			this->b_CapturePSD->TabIndex = 4;
@@ -221,7 +227,7 @@ namespace singr_gui {
 			// 
 			// tb_updates
 			// 
-			this->tb_updates->Location = System::Drawing::Point(913, 392);
+			this->tb_updates->Location = System::Drawing::Point(913, 378);
 			this->tb_updates->Name = L"tb_updates";
 			this->tb_updates->ReadOnly = true;
 			this->tb_updates->Size = System::Drawing::Size(235, 20);
@@ -229,7 +235,7 @@ namespace singr_gui {
 			// 
 			// tb_savefilename
 			// 
-			this->tb_savefilename->Location = System::Drawing::Point(746, 665);
+			this->tb_savefilename->Location = System::Drawing::Point(746, 651);
 			this->tb_savefilename->Name = L"tb_savefilename";
 			this->tb_savefilename->ReadOnly = true;
 			this->tb_savefilename->Size = System::Drawing::Size(402, 20);
@@ -238,7 +244,7 @@ namespace singr_gui {
 			// label2
 			// 
 			this->label2->AutoSize = true;
-			this->label2->Location = System::Drawing::Point(743, 646);
+			this->label2->Location = System::Drawing::Point(743, 632);
 			this->label2->Name = L"label2";
 			this->label2->Size = System::Drawing::Size(98, 13);
 			this->label2->TabIndex = 10;
@@ -248,7 +254,7 @@ namespace singr_gui {
 			// 
 			this->b_saveFile->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->b_saveFile->Location = System::Drawing::Point(936, 617);
+			this->b_saveFile->Location = System::Drawing::Point(936, 603);
 			this->b_saveFile->Name = L"b_saveFile";
 			this->b_saveFile->Size = System::Drawing::Size(112, 42);
 			this->b_saveFile->TabIndex = 11;
@@ -303,7 +309,7 @@ namespace singr_gui {
 			this->ch_PSD->Series->Add(series3);
 			this->ch_PSD->Series->Add(series4);
 			this->ch_PSD->Series->Add(series5);
-			this->ch_PSD->Size = System::Drawing::Size(709, 336);
+			this->ch_PSD->Size = System::Drawing::Size(709, 319);
 			this->ch_PSD->TabIndex = 12;
 			this->ch_PSD->Text = L"chart1";
 			// 
@@ -321,7 +327,7 @@ namespace singr_gui {
 			chartArea2->AxisY->Title = L"Counts";
 			chartArea2->Name = L"ChartArea1";
 			this->ch_ESpectrum->ChartAreas->Add(chartArea2);
-			this->ch_ESpectrum->Location = System::Drawing::Point(12, 369);
+			this->ch_ESpectrum->Location = System::Drawing::Point(12, 355);
 			this->ch_ESpectrum->Name = L"ch_ESpectrum";
 			series6->ChartArea = L"ChartArea1";
 			series6->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::StepLine;
@@ -466,6 +472,20 @@ namespace singr_gui {
 			this->addCutsOnEnergyToolStripMenuItem->Text = L"Add Cuts on Energy...";
 			this->addCutsOnEnergyToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::addCutsOnEnergyToolStripMenuItem_Click);
 			// 
+			// neutronDieAwayToolStripMenuItem
+			// 
+			this->neutronDieAwayToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->openToolStripMenuItem1});
+			this->neutronDieAwayToolStripMenuItem->Name = L"neutronDieAwayToolStripMenuItem";
+			this->neutronDieAwayToolStripMenuItem->Size = System::Drawing::Size(117, 20);
+			this->neutronDieAwayToolStripMenuItem->Text = L"Neutron Die-Away";
+			// 
+			// openToolStripMenuItem1
+			// 
+			this->openToolStripMenuItem1->Name = L"openToolStripMenuItem1";
+			this->openToolStripMenuItem1->Size = System::Drawing::Size(103, 22);
+			this->openToolStripMenuItem1->Text = L"Open";
+			this->openToolStripMenuItem1->Click += gcnew System::EventHandler(this, &Form1::openToolStripMenuItem1_Click);
+			// 
 			// ch_FOM
 			// 
 			this->ch_FOM->BorderlineColor = System::Drawing::Color::Black;
@@ -486,14 +506,14 @@ namespace singr_gui {
 			series7->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Bar;
 			series7->Name = L"Series1";
 			this->ch_FOM->Series->Add(series7);
-			this->ch_FOM->Size = System::Drawing::Size(421, 336);
+			this->ch_FOM->Size = System::Drawing::Size(421, 319);
 			this->ch_FOM->TabIndex = 17;
 			this->ch_FOM->Text = L"chart3";
 			// 
 			// chk_stf
 			// 
 			this->chk_stf->AutoSize = true;
-			this->chk_stf->Location = System::Drawing::Point(1054, 617);
+			this->chk_stf->Location = System::Drawing::Point(1054, 603);
 			this->chk_stf->Name = L"chk_stf";
 			this->chk_stf->Size = System::Drawing::Size(107, 17);
 			this->chk_stf->TabIndex = 18;
@@ -503,7 +523,7 @@ namespace singr_gui {
 			// chk_atf
 			// 
 			this->chk_atf->AutoSize = true;
-			this->chk_atf->Location = System::Drawing::Point(1054, 642);
+			this->chk_atf->Location = System::Drawing::Point(1054, 628);
 			this->chk_atf->Name = L"chk_atf";
 			this->chk_atf->Size = System::Drawing::Size(94, 17);
 			this->chk_atf->TabIndex = 19;
@@ -512,28 +532,28 @@ namespace singr_gui {
 			// 
 			// tb_baseline
 			// 
-			this->tb_baseline->Location = System::Drawing::Point(784, 369);
+			this->tb_baseline->Location = System::Drawing::Point(784, 355);
 			this->tb_baseline->Name = L"tb_baseline";
 			this->tb_baseline->Size = System::Drawing::Size(100, 20);
 			this->tb_baseline->TabIndex = 20;
 			// 
 			// tb_short
 			// 
-			this->tb_short->Location = System::Drawing::Point(784, 396);
+			this->tb_short->Location = System::Drawing::Point(784, 382);
 			this->tb_short->Name = L"tb_short";
 			this->tb_short->Size = System::Drawing::Size(100, 20);
 			this->tb_short->TabIndex = 21;
 			// 
 			// tb_long
 			// 
-			this->tb_long->Location = System::Drawing::Point(784, 423);
+			this->tb_long->Location = System::Drawing::Point(784, 409);
 			this->tb_long->Name = L"tb_long";
 			this->tb_long->Size = System::Drawing::Size(100, 20);
 			this->tb_long->TabIndex = 22;
 			// 
 			// tb_full
 			// 
-			this->tb_full->Location = System::Drawing::Point(784, 450);
+			this->tb_full->Location = System::Drawing::Point(784, 436);
 			this->tb_full->Name = L"tb_full";
 			this->tb_full->Size = System::Drawing::Size(100, 20);
 			this->tb_full->TabIndex = 23;
@@ -541,7 +561,7 @@ namespace singr_gui {
 			// label1
 			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(728, 372);
+			this->label1->Location = System::Drawing::Point(728, 358);
 			this->label1->Name = L"label1";
 			this->label1->Size = System::Drawing::Size(50, 13);
 			this->label1->TabIndex = 24;
@@ -550,7 +570,7 @@ namespace singr_gui {
 			// label3
 			// 
 			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(728, 399);
+			this->label3->Location = System::Drawing::Point(728, 385);
 			this->label3->Name = L"label3";
 			this->label3->Size = System::Drawing::Size(50, 13);
 			this->label3->TabIndex = 25;
@@ -559,7 +579,7 @@ namespace singr_gui {
 			// label4
 			// 
 			this->label4->AutoSize = true;
-			this->label4->Location = System::Drawing::Point(728, 426);
+			this->label4->Location = System::Drawing::Point(728, 412);
 			this->label4->Name = L"label4";
 			this->label4->Size = System::Drawing::Size(49, 13);
 			this->label4->TabIndex = 26;
@@ -568,7 +588,7 @@ namespace singr_gui {
 			// label5
 			// 
 			this->label5->AutoSize = true;
-			this->label5->Location = System::Drawing::Point(728, 453);
+			this->label5->Location = System::Drawing::Point(728, 439);
 			this->label5->Name = L"label5";
 			this->label5->Size = System::Drawing::Size(41, 13);
 			this->label5->TabIndex = 27;
@@ -576,7 +596,7 @@ namespace singr_gui {
 			// 
 			// b_SetIntegrationTimes
 			// 
-			this->b_SetIntegrationTimes->Location = System::Drawing::Point(759, 476);
+			this->b_SetIntegrationTimes->Location = System::Drawing::Point(759, 462);
 			this->b_SetIntegrationTimes->Name = L"b_SetIntegrationTimes";
 			this->b_SetIntegrationTimes->Size = System::Drawing::Size(125, 42);
 			this->b_SetIntegrationTimes->TabIndex = 28;
@@ -586,7 +606,7 @@ namespace singr_gui {
 			// 
 			// b_setTriggerThreshold
 			// 
-			this->b_setTriggerThreshold->Location = System::Drawing::Point(759, 570);
+			this->b_setTriggerThreshold->Location = System::Drawing::Point(759, 556);
 			this->b_setTriggerThreshold->Name = L"b_setTriggerThreshold";
 			this->b_setTriggerThreshold->Size = System::Drawing::Size(125, 42);
 			this->b_setTriggerThreshold->TabIndex = 29;
@@ -596,7 +616,7 @@ namespace singr_gui {
 			// 
 			// label6
 			// 
-			this->label6->Location = System::Drawing::Point(724, 534);
+			this->label6->Location = System::Drawing::Point(724, 520);
 			this->label6->Name = L"label6";
 			this->label6->Size = System::Drawing::Size(54, 33);
 			this->label6->TabIndex = 30;
@@ -605,7 +625,7 @@ namespace singr_gui {
 			// 
 			// tb_threshold
 			// 
-			this->tb_threshold->Location = System::Drawing::Point(784, 541);
+			this->tb_threshold->Location = System::Drawing::Point(784, 527);
 			this->tb_threshold->Name = L"tb_threshold";
 			this->tb_threshold->Size = System::Drawing::Size(100, 20);
 			this->tb_threshold->TabIndex = 31;
@@ -613,32 +633,26 @@ namespace singr_gui {
 			// label7
 			// 
 			this->label7->AutoSize = true;
-			this->label7->Location = System::Drawing::Point(910, 376);
+			this->label7->Location = System::Drawing::Point(910, 362);
 			this->label7->Name = L"label7";
 			this->label7->Size = System::Drawing::Size(50, 13);
 			this->label7->TabIndex = 32;
 			this->label7->Text = L"Updates:";
 			// 
-			// neutronDieAwayToolStripMenuItem
+			// backgroundWorker1
 			// 
-			this->neutronDieAwayToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) {this->openToolStripMenuItem1});
-			this->neutronDieAwayToolStripMenuItem->Name = L"neutronDieAwayToolStripMenuItem";
-			this->neutronDieAwayToolStripMenuItem->Size = System::Drawing::Size(117, 20);
-			this->neutronDieAwayToolStripMenuItem->Text = L"Neutron Die-Away";
-			// 
-			// openToolStripMenuItem1
-			// 
-			this->openToolStripMenuItem1->Name = L"openToolStripMenuItem1";
-			this->openToolStripMenuItem1->Size = System::Drawing::Size(152, 22);
-			this->openToolStripMenuItem1->Text = L"Open";
-			this->openToolStripMenuItem1->Click += gcnew System::EventHandler(this, &Form1::openToolStripMenuItem1_Click);
+			this->backgroundWorker1->WorkerReportsProgress = true;
+			this->backgroundWorker1->WorkerSupportsCancellation = true;
+			this->backgroundWorker1->DoWork += gcnew System::ComponentModel::DoWorkEventHandler(this, &Form1::backgroundWorker1_DoWork);
+			this->backgroundWorker1->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &Form1::backgroundWorker1_ProgressChanged);
+			this->backgroundWorker1->RunWorkerCompleted += gcnew System::ComponentModel::RunWorkerCompletedEventHandler(this, &Form1::backgroundWorker1_RunWorkerCompleted);
 			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::ControlLight;
-			this->ClientSize = System::Drawing::Size(1160, 698);
+			this->ClientSize = System::Drawing::Size(1160, 681);
 			this->Controls->Add(this->label7);
 			this->Controls->Add(this->tb_threshold);
 			this->Controls->Add(this->label6);
@@ -685,223 +699,43 @@ private: // Declare class-wide variables here
 
 private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventArgs^  e) {
 			// This section controls what happens when a user clicks b_CapturePSD "Run Selection"
-			// Sam's code for connecting to the board using ethernet will go here
-			// as will code for connecting to the comm port.				 	
-				std::string msg;
-				std::string msgstop;
-				psdCapRun = !psdCapRun;	//flip the boolean value each time the button is clicked
-
-				Client client("172.30.0.10");
-				if ( !client.Start()) {				
-					this->tb_updates->Text = "Client start failed";				
-					return;
-				} 
-				 
-				int iBaselineSamples(0);
-				int iblvalue(0);
-				int iShortSamples(0);
-				int ishortvalue(0);
-				int iLongSamples(0);
-				int ilongvalue(0);
-				int iFullSamples(0);
-				int ifullvalue(0);
-				double dPSDxmin(0.0);
-				double dPSDxmax(0.0);
-				double dPSDymin(0.0);
-				double dPSDymax(0.0);
-				double dESpectrumDomain(0.0);
-				double dESpectrumBinSize(0.0);
-				double dESpectrumBin(0.0);
-				double dFOMRange(0.0);
-				double dFOMBinSize(0.0);
-				double dFOMBin(0.0);
-				
-				int check(0);
-				int placeInArray(0);
-				int runCounter(0);
-				bool doPSD(true);
-				int iESpectrumArray[1000] = {};
-				int iESpectrumArrayIndex(0);
-				int iFOMArray[100] = {};
-				int iFOMArrayIndex(0);
-
-				/* Determine the number of samples, based on what is in textboxes */
-				if(this->tb_baseline->Text == String::Empty)
-				{
-					iBaselineSamples = ((200 - 8) / 4) + 1;
-					iShortSamples = ((200 + 232) / 4) + 1;
-					iLongSamples = ((200 + 616) / 4) + 1;
-					iFullSamples = ((200 + 8008) / 4) + 1;
-
-					this->tb_baseline->Text = (iBaselineSamples * 4) - 52 + " ";
-					this->tb_short->Text = (iShortSamples * 4) - 52 + " ";
-					this->tb_long->Text = (iLongSamples * 4) - 52 + " ";
-					this->tb_full->Text = (iFullSamples * 4) - 52 + " ";
-				}
-				else
-				{
-					Int32::TryParse(this->tb_baseline->Text, iblvalue);
-					Int32::TryParse(this->tb_short->Text, ishortvalue);
-					Int32::TryParse(this->tb_long->Text, ilongvalue);
-					Int32::TryParse(this->tb_full->Text, ifullvalue);
-					
-					iBaselineSamples = ((200 + iblvalue) / 4) + 1;
-					iShortSamples = ((200 + ishortvalue) / 4) + 1;
-					iLongSamples = ((200 + ilongvalue) / 4) + 1;
-					iFullSamples = ((200 + ifullvalue) / 4) + 1;
-				}
-
-				/* Determine the domain and set axes for the Energy Spectrum chart */
-				dPSDxmin = this->ch_PSD->ChartAreas[0]->AxisX->Minimum;
-				dPSDxmax = this->ch_PSD->ChartAreas[0]->AxisX->Maximum;
-				this->ch_ESpectrum->ChartAreas[0]->AxisX->Minimum = dPSDxmin;
-				this->ch_ESpectrum->ChartAreas[0]->AxisX->Maximum = dPSDxmax;
-				dESpectrumDomain = dPSDxmax - dPSDxmin;
-				dESpectrumBinSize = dESpectrumDomain / 1000.0;	// 1,000 bins
-
-				/* Determine the domain and set axes for the Energy Spectrum chart */
-				dPSDymin = this->ch_PSD->ChartAreas[0]->AxisY->Minimum;
-				dPSDymax = this->ch_PSD->ChartAreas[0]->AxisY->Maximum;
-				this->ch_FOM->ChartAreas[0]->AxisX->Minimum = dPSDymin;
-				this->ch_FOM->ChartAreas[0]->AxisX->Maximum = dPSDymax;
-				dFOMRange = dPSDymax - dPSDymin;
-				dFOMBinSize = dFOMRange / 100.0;	// 100 bins
-				 
-				int * msgInt(nullptr);		//declare a pointer and initialize it to null
-				msgInt = new int[12300];	//dynamically allocate the array of integers	//how big does this need to be?
-				//memset(&msgInt, 0, sizeof(msgInt));	//initialize all the values
-				
-//Place code below here
-				
-				/* Variables and Arrays */
-				msg = "a";
-				int ii(0);
-				int arrayval(0);
-				double bl1(0.0);double bl2(0.0);double bl3(0.0);double bl4(0.0);
-				double bl_avg(0.0);
-				double si(0.0);
-				double li(0.0);
-				double fi(0.0);
-				double psd(0.0);
-				double energy(0.0);
-
-				/* Enter Ether mode */
-				std::string strMode = "0";			//choose mode menu
-				std::string enableSystem = "1";		//enable the system
-				std::string strProcessedData = "4";	//choose processed data mode
-				std::string strEther = "9";			//begin
-
-				client.Send((char *)strMode.c_str());
-				Sleep(2000);
-				client.Send((char *)strProcessedData.c_str());
-				Sleep(2000);
-				client.Send((char *)enableSystem.c_str());
-				Sleep(2000);
-				client.Send((char *)strEther.c_str());
-				Sleep(2000);
-
-				while(psdCapRun)
-				{			
-					/* Send a message -> Receive data */
-					client.Send(msg.c_str());
-					this->tb_updates->Text = "Receiving data.";
-					Sleep(2000);
-					placeInArray = client.Recv(msgInt);
-
-					if(placeInArray < 2)	//check if we have received any data
-						doPSD = false;
-
-					ii = 0;
-
-					/* msgInt now has our ints, loop over them to pull out data */
-					while(doPSD)	//come up with loop condition
-					{
-						arrayval = msgInt[ii];
-						switch(arrayval)
-						{
-							case 111111:
-								bl4 = bl3;
-								bl3 = bl2;
-								bl2 = bl1;
-								bl1 = static_cast<double>(msgInt[ii+3]) / (16 * iBaselineSamples);
-								if(bl4==0.0)
-									bl_avg = (msgInt[ii+3] / (16 * iBaselineSamples));	//until we have 4 BLs, use the regular calculation
-								else
-									bl_avg = (bl4+bl3+bl2+bl1) / 4.0;
-			
-								si = static_cast<double>(msgInt[ii+4]) / 16.0 - (bl_avg * iShortSamples);
-								li = static_cast<double>(msgInt[ii+5]) / 16.0 - (bl_avg * iLongSamples);
-								fi = static_cast<double>(msgInt[ii+6]) / 16.0 - (bl_avg * iFullSamples);
-								psd = si / (li - si);
-								energy = 1.0 * fi + 0.0;
-			
-								/* Add data to the charts */
-								if ((psd > 0 && psd < 2) && (energy > 0 && energy < 200000))			//check if it's within PSD cuts
-								{
-									this->ch_PSD->Series["Series1"]->Points->AddXY(fi, psd);
-								}
-			
-								iESpectrumArrayIndex = static_cast<int>(energy / dESpectrumBinSize);	//Check data is within Energy spectrum bins
-								if (iESpectrumArrayIndex >= 0 && iESpectrumArrayIndex < 1000)
-									++iESpectrumArray[iESpectrumArrayIndex];
-			
-								iFOMArrayIndex = static_cast<int>(psd / dFOMBinSize);					//Check data is within Energy spectrum bins
-								if (iFOMArrayIndex >= 0 && iFOMArrayIndex < 100)
-									++iFOMArray[iFOMArrayIndex];
-			
-								this->ch_ESpectrum->Series["Series1"]->Points->Clear();					//Plot Energy Spectrum data
-								for(int i = 0; i < 999; i++)
-								{
-									dESpectrumBin = dESpectrumBinSize * (i + 0.5);
-									this->ch_ESpectrum->Series["Series1"]->Points->AddXY(dESpectrumBin, iESpectrumArray[i]);
-								}
-			
-								this->ch_FOM->Series["Series1"]->Points->Clear();					//Plot FOM data
-								for(int j = 0; j < 999; j++)
-								{
-									dFOMBin = dFOMBinSize * (j + 0.5);
-									this->ch_FOM->Series["Series1"]->Points->AddXY(dFOMBin, iFOMArray[j]);
-								}
-			
-								ii += 8;	//align with the next identifier
-								break;
-							case 121212: case 131313:	//when we find the next identifier, we break
-								doPSD = false;
-								break;
-							default:
-								++ii;
-								break;
-						}//end of switch
-					}	 //end of doPSD
-					doPSD = true;
-				}		 //end of psdCapRun
-//Replace above here
-				/* Check if the user has clicked the 'stop' button */			
-				if ( psdCapRun == false )
-				{
-					this->tb_updates->Text = "Stopped. ";
-					client.Stop();
-					delete [] msgInt;
-					msgInt = nullptr;
-					return;
-				}
-				++runCounter;
-				Application::DoEvents();
-				 
-				/* The user hit stop or pressed exit in file menu, clean up what we were doing */
-				client.Stop();
-				this->tb_updates->Text = "Complete.";
-				delete [] msgInt;
-				msgInt = nullptr;
+			psdCapRun = !psdCapRun;	//flip the boolean value each time the button is clicked	//is init'd as false
+			if(psdCapRun == false)
+			{
+				/* need this to send a "quit" command to the devkit...when that is an option */
+				backgroundWorker1->CancelAsync();
+				this->tb_updates->Text = "Cancelled worker thread.";
 				return;
+			}
+
+			if(this->tb_savefilename->Text == String::Empty)	//if there is no filename in the textbox
+			{
+				this->tb_updates->Text = "Please select a save file location.";	//alert the user they need one
+				psdCapRun = !psdCapRun;
+				return;
+			}
+			String^ saveFileName = this->tb_savefilename->Text;	//this is a managed string
+			//marshal_context^ context = gcnew marshal_context();
+			//const char * strFileName = context->marshal_as<const char*>(saveFileName);	//convert the filename into something we may pack up and pass to the worker
+			
+			/* Pack up the filename to pass to the background worker */
+			dataForBkgdWorker^ s_variables = gcnew dataForBkgdWorker;
+			s_variables->mstrFileName = saveFileName;
+			
+			/* call the background worker with argument being a package of data (just a filename, for now) that it needs */
+			backgroundWorker1->RunWorkerAsync(s_variables);
+
+			this->tb_updates->Text = "Waiting to report received data.";
+
+			return;
 }	// End of Run button click
 
 private: System::Void b_saveFile_Click(System::Object^  sender, System::EventArgs^  e) {
-			 System::Windows::Forms::DialogResult result = folderBrowserDialog1->ShowDialog();
+			 System::Windows::Forms::DialogResult result = saveFileDialog1->ShowDialog();
 			 
 			 if (result == System::Windows::Forms::DialogResult::OK)
 			 {
-					this->tb_savefilename->Text = folderBrowserDialog1->SelectedPath;
+					this->tb_savefilename->Text = saveFileDialog1->FileName;
 			 }
 			 if (result == System::Windows::Forms::DialogResult::Cancel)
 			 {
@@ -922,6 +756,9 @@ private: System::Void captureWaveformsToolStripMenuItem_Click(System::Object^  s
 		 }
 
 private: System::Void b_setTriggerThreshold_Click(System::Object^  sender, System::EventArgs^  e) {
+			 /* Check that the user has entered a value */
+			 // alert the user that they need to enter a value first
+
 			 /* Declare variables */
 			 std::string retMessage = "";
 			 std::string chooseMode = "3";
@@ -957,18 +794,21 @@ private: System::Void b_setTriggerThreshold_Click(System::Object^  sender, Syste
 		 }//eosettriggerthreshold
 
 private: System::Void b_SetIntegrationTimes_Click(System::Object^  sender, System::EventArgs^  e) {
+			 /* Check for values entered...if none, don't finish this process */
+			 //if the user has not entered any values, this could mess up the input process
+
 			 /* Declare variables */
 			 std::string chooseMode = "4";
 			 const char * strBaseline = "";
 			 const char * strShort = "";
 			 const char * strLong = "";
 			 const char * strFull = "";
-			 String^ baselineInt = this->tb_baseline->Text;
+			 String^ baselineInt = this->tb_baseline->Text;	// read in the values in the textboxes
 			 String^ shortInt = this->tb_short->Text;
 			 String^ longInt = this->tb_long->Text;
  			 String^ fullInt = this->tb_full->Text;
 
-			 marshal_context^ context = gcnew marshal_context();
+			 marshal_context^ context = gcnew marshal_context();			// convert the values into unmanaged types so we may work with them
 			 strBaseline = context->marshal_as<const char*>( baselineInt );
 			 strShort = context->marshal_as<const char*>( shortInt );
 			 strLong = context->marshal_as<const char*>( longInt );
@@ -986,7 +826,7 @@ private: System::Void b_SetIntegrationTimes_Click(System::Object^  sender, Syste
 			 /* Send the mode selection, then the integration times over ethernet */
 			 setInts.Send((char*)chooseMode.c_str());	//Calls setIntegrationTimes(0) in the devkit
 			 Sleep(1000);
-			 setInts.Send(strBaseline);
+			 setInts.Send(strBaseline);					// Pass the values to the devkit
 			 Sleep(500);
 			 setInts.Send(strShort);
 			 Sleep(500);
@@ -1195,6 +1035,150 @@ private: System::Void addCutsOnPSDToolStripMenuItem_Click(System::Object^  sende
 
 private: System::Void openToolStripMenuItem1_Click(System::Object^  sender, System::EventArgs^  e) {
 			 //This will open a window to the neutron die-away curve utility
+		 }
+
+private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::ComponentModel::DoWorkEventArgs^  e) {
+			BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
+
+			String^ filename = safe_cast<dataForBkgdWorker^>(e->Argument)->mstrFileName;	//get the data from the packaged arguments
+			marshal_context^ context = gcnew marshal_context();								//convert the filename to an unmanaged string type
+			const char * strFileName = context->marshal_as<const char*>(filename);
+			
+			Client client("172.30.0.10");
+			if ( !client.Start()) {				
+				this->tb_updates->Text = "Client start failed";				
+				return;
+			} 
+				 				
+			/* Variables and Arrays */
+			std::string msg = "a";
+			std::string msgQuit = "q";
+			std::string strMode = "0";			//choose mode menu
+			std::string enableSystem = "1";		//enable the system
+			std::string strProcessedData = "4";	//choose processed data mode
+			std::string strEther = "9";			//begin
+			int * recvBuffer(nullptr);
+			recvBuffer = new int[8000]();
+
+			/* Setup the uZ and begin data transfer */
+			client.Send((char *)strMode.c_str());
+			Sleep(2000);
+			client.Send((char *)strProcessedData.c_str());
+			Sleep(2000);
+			client.Send((char *)enableSystem.c_str());
+			Sleep(2000);
+			client.Send((char *)strEther.c_str());
+			Sleep(2000);
+			//int imini = client.miniRecv();
+			//worker->ReportProgress(imini);
+
+			while(worker->CancellationPending == false)//until the user hits the capture button twice this will loop
+			{
+				client.Send(msg.c_str());
+
+				int iDataReceived = client.Recv((int *)recvBuffer);
+				if(iDataReceived == 1)
+					continue;
+
+				//need to box up the array into an object
+				array<int>^ recvBufferToPass = gcnew array<int>(iDataReceived);
+				for(int ii = 0; ii < iDataReceived; ++ii)
+				{
+					recvBufferToPass[ii] = recvBuffer[ii];
+				}
+
+				worker->ReportProgress(iDataReceived, recvBufferToPass);
+
+				int iSortPrintReturn = client.SortPrint(strFileName, (int *)recvBuffer, iDataReceived);
+				if(iSortPrintReturn == 414141)
+					worker->ReportProgress(iSortPrintReturn);
+				else
+					worker->ReportProgress(-1);
+			}
+
+			client.Send((char *)msgQuit.c_str());
+			Sleep(2000);
+
+		 }
+private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender, System::ComponentModel::ProgressChangedEventArgs^  e) 		 
+		 {
+			 if(e->ProgressPercentage == 414141)
+			 {
+				 this->tb_updates->Text = "Data saved.";
+				 return;
+			 }
+			 else if(e->ProgressPercentage == -1)
+			 {
+				 this->tb_updates->Text = "Data not saved.";
+				 return;
+			 }
+			 else
+				 this->tb_updates->Text = e->ProgressPercentage + " bytes received.";
+
+			 /* Variables */
+			 int ii(0);
+			 double bl1(0);	double bl2(0); double bl3(0); double bl4(0); double bl_avg(0);
+			 double si(0); double li(0); double fi(0);
+			 double psd(0);
+			 double energy(0);
+			 
+			 /* unpack the values from the array so we may plot them */
+			 array<int>^ recvBufferPassed = safe_cast<array<int>^>(e->UserState);
+
+			 while(ii < ((e->ProgressPercentage) / 8))
+			 {
+				 switch(recvBufferPassed[ii])
+				 {
+				 case 111111:
+					 bl4 = bl3;
+					 bl3 = bl2;
+					 bl2 = bl1;
+					 bl1 = static_cast<double>(recvBufferPassed[ii+3]) / (16.0 * 38.0);	//change this to the real baseline textbox values
+					 if(bl4 == 0.0)
+						 bl_avg = bl1;
+					 else
+						 bl_avg = (bl4 + bl3 + bl2 + bl1) / 4.0;
+					 si = static_cast<double>(recvBufferPassed[ii+4]) / 16.0 - (bl_avg * 73.0);
+					 li = static_cast<double>(recvBufferPassed[ii+5]) / 16.0 - (bl_avg * 169.0);
+					 fi = static_cast<double>(recvBufferPassed[ii+6]) / 16.0 - (bl_avg * 1551.0);
+					 psd = si / (li - si);
+					 energy = 1.0 * fi + 0.0;
+					 
+					 /* add this data to the psd chart */
+					 if((psd > 0 && psd < 2) && (energy > 0 && energy < 200000))
+						 this->ch_PSD->Series["Series1"]->Points->AddXY(fi, psd);
+					 ii += 8;
+					 break;
+				 default:
+					 ++ii;
+					 break;
+				 }	//end of switch
+
+				 //put code for the energy spectrum chart here
+				 double dESpectrumBinSize = (200000 - 0) / 1000; //psdXmax - psdXmin / numbins
+				 double dESpectrumBin(0.0);
+				 int iESpectrumArray[1000] = {};
+				 int iESpectrumArrayIndex(0);
+
+				 iESpectrumArrayIndex = static_cast<int>(energy / dESpectrumBinSize);	//check data is within the spectrum bins
+				 if(iESpectrumArrayIndex >= 0 && iESpectrumArrayIndex < 1000)
+					 ++iESpectrumArray[iESpectrumArrayIndex];
+
+				 this->ch_ESpectrum->Series["Series1"]->Points->Clear();   
+				 for(int jj = 0; jj < 999; jj++)
+				 {
+					 dESpectrumBin = dESpectrumBinSize * (jj + 0.5);
+					 this->ch_ESpectrum->Series["Series1"]->Points->AddXY(dESpectrumBin, iESpectrumArray[jj]);
+				 }
+			 }
+
+		 }
+private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^  sender, System::ComponentModel::RunWorkerCompletedEventArgs^  e) {
+
+			 if(e->Cancelled)
+				 this->tb_updates->Text = "Worker successfully cancelled.";
+			 else if(e->Error != nullptr)
+				 MessageBox::Show(e->Error->Message);			 
 		 }
 };	// leave semi-colon, closes public ref class Form1, line 25
 }	// eof, closes namespace singr_gui, line 10

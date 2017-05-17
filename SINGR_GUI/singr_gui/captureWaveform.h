@@ -4,6 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <msclr\marshal.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cstdlib>
+#include <iomanip>
 
 namespace singr_gui {
 
@@ -14,6 +20,8 @@ namespace singr_gui {
 	using namespace System::Data;
 	using namespace System::Drawing;
 	using namespace msclr::interop;
+	using namespace System::IO::Ports;
+	using namespace std;
 	
 	/// <summary>
 	/// Summary for captureWaveform
@@ -73,6 +81,7 @@ namespace singr_gui {
 	private: System::Windows::Forms::Button^  b_SaveFile;
 	private: System::Windows::Forms::TextBox^  tb_SaveFileLocation;
 	private: System::Windows::Forms::Label^  label6;
+	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 
 
 
@@ -91,8 +100,8 @@ namespace singr_gui {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea1 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea2 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series2 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			this->bExit = (gcnew System::Windows::Forms::Button());
 			this->chartCapWF = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
 			this->bCapWF = (gcnew System::Windows::Forms::Button());
@@ -109,6 +118,7 @@ namespace singr_gui {
 			this->b_SaveFile = (gcnew System::Windows::Forms::Button());
 			this->tb_SaveFileLocation = (gcnew System::Windows::Forms::TextBox());
 			this->label6 = (gcnew System::Windows::Forms::Label());
+			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->chartCapWF))->BeginInit();
 			this->gb_WFType->SuspendLayout();
 			this->SuspendLayout();
@@ -125,22 +135,22 @@ namespace singr_gui {
 			// 
 			// chartCapWF
 			// 
-			chartArea1->AxisX->IsStartedFromZero = false;
-			chartArea1->AxisX->Maximum = 3;
-			chartArea1->AxisX->Minimum = -1;
-			chartArea1->AxisX->Title = L"Time (us)";
-			chartArea1->AxisY->IsStartedFromZero = false;
-			chartArea1->AxisY->Maximum = 2500;
-			chartArea1->AxisY->Minimum = 1900;
-			chartArea1->AxisY->Title = L"ADC Counts";
-			chartArea1->Name = L"ChartArea1";
-			this->chartCapWF->ChartAreas->Add(chartArea1);
+			chartArea2->AxisX->IsStartedFromZero = false;
+			chartArea2->AxisX->Maximum = 4;
+			chartArea2->AxisX->Minimum = 0;
+			chartArea2->AxisX->Title = L"Time (us)";
+			chartArea2->AxisY->IsStartedFromZero = false;
+			chartArea2->AxisY->Maximum = 2800;
+			chartArea2->AxisY->Minimum = 1900;
+			chartArea2->AxisY->Title = L"ADC Counts";
+			chartArea2->Name = L"ChartArea1";
+			this->chartCapWF->ChartAreas->Add(chartArea2);
 			this->chartCapWF->Location = System::Drawing::Point(12, 12);
 			this->chartCapWF->Name = L"chartCapWF";
-			series1->ChartArea = L"ChartArea1";
-			series1->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
-			series1->Name = L"Series1";
-			this->chartCapWF->Series->Add(series1);
+			series2->ChartArea = L"ChartArea1";
+			series2->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
+			series2->Name = L"Series1";
+			this->chartCapWF->Series->Add(series2);
 			this->chartCapWF->Size = System::Drawing::Size(795, 480);
 			this->chartCapWF->TabIndex = 1;
 			this->chartCapWF->Text = L"chartCapWF";
@@ -260,6 +270,7 @@ namespace singr_gui {
 			this->b_SaveFile->TabIndex = 19;
 			this->b_SaveFile->Text = L"Choose Save File...";
 			this->b_SaveFile->UseVisualStyleBackColor = true;
+			this->b_SaveFile->Click += gcnew System::EventHandler(this, &captureWaveform::b_SaveFile_Click);
 			// 
 			// tb_SaveFileLocation
 			// 
@@ -331,6 +342,18 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 				 return;
 			 }
 
+			 /* get the filename from the textbox */
+			 if(this->tb_SaveFileLocation->Text == String::Empty)	//if there is no filename in the textbox
+			 {
+				 this->tbCapWF->Text = "Please select a save file location.";	//alert the user they need one
+				 //psdCapRun = !psdCapRun;
+				 return;
+			 }
+			 String^ saveFileName = this->tb_SaveFileLocation->Text;	//this is a managed string
+			 marshal_context^ context = gcnew marshal_context();
+			 const char * fileName = context->marshal_as<const char*>(saveFileName);
+			 
+
 			 /* Set up the transaction */
 			 const char * chooseMode = "0";
 			 const char * enableSystem = "1";
@@ -352,13 +375,15 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 				 //Application::DoEvents();
 
 				 /* Send a char to the board to receive a buffer of data */
-				 const char * sendByte = "0";
+				 const char * sendByte = "a";
 				 getWaveForm.Send(sendByte);
 				 Sleep(2000);
 
 				 /* Pass in a pointer to a buffer and an int to get back the number of bytes written to the buffer */
 				 retVal = getWaveForm.Recv(wfBuff);	// retVal gives the number of ints that were written to the buffer
-				 if ( retVal < 2 ) {
+				 this->tbCapWF->Text = retVal + " bytes received.";
+				 if ( retVal < 10 ) 
+				 {
 					 this->tbCapWF->Text = "No wf data received.";
 
 					 if(stopVal >=10)
@@ -372,22 +397,38 @@ private: System::Void bCapWF_Click(System::Object^  sender, System::EventArgs^  
 				 stopVal = 0;	//If we get past the 'no data' check, reset stop value
 			
 				 /* Create a set of times at 4 ns spacing to plot the wf values against */
-				 for( int ii(0); ii < retVal; ++ii) {
-					 wfTime[ii] = ii * 4.0 / 1000.0;	// Each wf data point is 4 ns apart
+				 for( int ii(0.0); ii < retVal; ++ii) {
+					 wfTime[ii] = (double)ii * (4.0 / 1000.0);	// Each wf data point is 4 ns apart
 				 }
 
 				 /* Plot the points in the chart */
-				 for (int jj(1); jj < retVal; ++jj)
+				 for (int jj(1); jj < retVal - 2; ++jj)
 				 {
 					 this->chartCapWF->Series["Series1"]->Points->AddXY(wfTime[jj], (wfBuff[jj] / 16));
 				 }
+
+				 ofstream output_file_wf;
+				 output_file_wf.open(fileName,ios::app);
+				 if ( !output_file_wf.is_open() )
+				 {
+					 this->tbCapWF->Text = "One waveform displayed, no file saved.";
+				 }
+
+ 				 output_file_wf << "ffffff" << endl;
+
+				 //write all our data to the file above
+				 for(int i = 0; i < retVal - 2; i++)
+				 {
+					 output_file_wf << wfBuff[i] << endl;
+				 }
+
 				 Application::DoEvents();
 				 break;
 			 }	//End of plot wf while loop
 
 			 /* Disconnect from the client class and clean up our work */
 			 getWaveForm.Stop();
-			 this->tbCapWF->Text = "One waveform displayed.";
+			 //this->tbCapWF->Text = "One waveform displayed.";
 			 delete [] wfTime;
 			 wfTime = nullptr;
 			 delete [] wfBuff;
@@ -475,5 +516,17 @@ private: System::Void b_setThreshold_Click(System::Object^  sender, System::Even
 //			 return;
 //		 }
 
+private: System::Void b_SaveFile_Click(System::Object^  sender, System::EventArgs^  e) {
+			 System::Windows::Forms::DialogResult result = saveFileDialog1->ShowDialog();
+			 
+			 if (result == System::Windows::Forms::DialogResult::OK)
+			 {
+					this->tb_SaveFileLocation->Text = saveFileDialog1->FileName;
+			 }
+			 if (result == System::Windows::Forms::DialogResult::Cancel)
+			 {
+				 return;
+			 }
+		 }
 };//public ref class
 }//namespace
