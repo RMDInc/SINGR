@@ -92,8 +92,9 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 	{
 		int dat;
 		int dram_addr = 0;
-		int dram_base = 0xa000000;
-		int dram_ceiling = 0xa004000;
+		int dram_base = 0xa000000;		//167772160
+		int dram_ceiling = 0xa004000;	//167788544
+//		int dram_ceiling = 0xa00c008;	//167821320 - 167772160 = 49160 // just get the AA data for now, this is all three buffers
 		int len = 0;
 		int writePtrAA = 0;
 		int readPtrAA = 0;
@@ -102,74 +103,56 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
 
 		Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
 		Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
+		
+		Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);
+		Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
+		Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
+		sleep(1);
+		Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 0);
 
-		while(1)
+		switch(g_mode){
+		case 0: case 1: case 2:	//Any WF choice comes here
+			while(1)			//test for data; when > 4095, we have a full buffer
+			{
+				dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) * 4 + dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
+				if(dram_ceiling - dram_base > 4095)
+					break;
+			}
+			Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
+			Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
+			g_txcomplete = 0;
+			break;
+		case 4:
+			while(1)
+			{
+				writePtrAA = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how many ints were written into the bram buffer
+				readPtrAA = Xil_In32 (XPAR_AXI_GPIO_19_BASEADDR);	//checks how far we have read into the buffer (0)
+				if((writePtrAA - readPtrAA) >= 4095)				//tells when the AA integrator has written a full buffer (can be out of sync with other integrators)
+					break;
+			}
+			Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
+			Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
+			break;
+		default:
+			g_txcomplete = 0;
+			g_menuSel = 102;	//indicates mode is incorrect
+			return ERR_OK;
+			break;
+		}
+
+		for(dram_addr = dram_base; dram_addr <= dram_ceiling; dram_addr+=4)
 		{
-			//writePtr = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how far we have written into the bram buffer
-			//readPtr = Xil_In32 (XPAR_AXI_GPIO_19_BASEADDR);		//checks how far we have read into the buffer
-			//if(abs(writePtr - readPtr) >= 4095)	//buffer is full
-			//{
-				switch(g_mode){
-				case 0: case 1: case 2:		//Any WF choice comes here
-					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);				//dma transfer
-					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
-					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
-					sleep(1);
-					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 0);
+			dat = Xil_In32(dram_addr);
+			sprintf(data, "%d\n", dat);
 
-					while(1)	//test for data; when > 4095, we have a full buffer
-					{
-						dram_ceiling = Xil_In32(XPAR_AXI_GPIO_20_BASEADDR) * 4 + dram_base;		//Read the value of the write pointer * 4; it gives the number of ints written
-						if(dram_ceiling - dram_base > 4095)
-							break;
-					}
-					g_txcomplete = 0;
-					break;
-				case 4:
+			err = tcp_write(tpcb, (void*)data, strlen(data), 0x01);
+			if(err != ERR_OK)
+				xil_printf("no space in tcp_snd_buf");
+		}
+		
+		err = tcp_write(tpcb, (void *)cDone, strlen(cDone), 0x01);	//put in a "finished" set of bits/bytes at the end to indicate transmission is complete
 
-					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 1);
-					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x48, 0xa000000);
-					Xil_Out32 (XPAR_AXI_DMA_0_BASEADDR + 0x58 , 65536);
-					sleep(1);
-					Xil_Out32 (XPAR_AXI_GPIO_15_BASEADDR, 0);
-
-					writePtrAA = Xil_In32 (XPAR_AXI_GPIO_11_BASEADDR);	//checks how many ints were written into the bram buffer
-					readPtrAA = Xil_In32 (XPAR_AXI_GPIO_19_BASEADDR);		//checks how far we have read into the buffer (0)
-					if((writePtrAA - readPtrAA) >= 4095)	//tells when the AA integrator has written a full buffer (can be out of sync with other integrators)
-					{
-						//dram_base = 0xa000000;		//167772160
-						//dram_ceiling = 0xa004000;	//167788544
-//						dram_ceiling = 0xa00c008;	//167821320 - 167772160 = 49160 // just get the AA data for now, this is all three buffers
-						sleep(1);
-						break;
-					}
-
-					Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,1);//reset BRAM buffers
-					Xil_Out32(XPAR_AXI_GPIO_9_BASEADDR,0);//reset BRAM buffers
-					break;
-				default:
-					g_txcomplete = 0;
-					g_menuSel = 102;	//indicates mode is incorrect
-					return ERR_OK;
-					break;
-				}
-
-				for(dram_addr = dram_base; dram_addr <= dram_ceiling; dram_addr+=4)
-				{
-					dat = Xil_In32(dram_addr);
-					sprintf(data, "%d\n", dat);
-
-					err = tcp_write(tpcb, (void*)data, strlen(data), 0x01);
-					if(err != ERR_OK)
-						xil_printf("no space in tcp_snd_buf");
-				}
-
-				//put in a "finished" set of bits/bytes at the end to indicate transmission is complete
-				err = tcp_write(tpcb, (void *)cDone, strlen(cDone), 0x01);
-
-				return ERR_OK;
-			//}
-		}//eowhile(true)
+		return ERR_OK;
 	}
 	else	//Otherwise come here for the polling loop
 	{

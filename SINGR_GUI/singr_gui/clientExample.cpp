@@ -131,15 +131,6 @@ bool Client::Send(const char* szMsg)
 	return true;
 };
 
-//code between here
-int Client::miniRecv()		//bool Recv() need to pass in pointer to msgInt array
-{   	
-	char miniBuff[4] = {};
-	int iResult = recv(ConnectSocket, miniBuff, 4, 0);	// receive data from the socket
-	return iResult;
-}
-//and here
-
 /* Receive message from server */
 int Client::Recv(int * intArray)		//bool Recv() need to pass in pointer to msgInt array
 {   
@@ -155,41 +146,34 @@ int Client::Recv(int * intArray)		//bool Recv() need to pass in pointer to msgIn
 	precvBuff = new char[DEFAULT_BUFFER_LENGTH]();
 
 	//just get this working...
-	Sleep(2000);
+	Sleep(2000);	//want to reduce this, should be a check loop or something that only waits as long as we need to
+					//loop until we receive a certain packet from the uZ?
 
 	while(1)
 	{
 		iResult = recv(ConnectSocket, cTransferBuff, 1000, 0);	// receive data from the socket
 		if(iResult < 0)											// error checking
 			break;
-		memcpy((precvBuff + iRecvd), cTransferBuff, iResult);	//copy the data from transferbuff to receive buffer
-		memcpy(cTestBuff, cTransferBuff, iResult);
-		iRecvd += iResult;
-		if(iResult < 1000)										//if we got less than 1k bytes, break out
+		if(iResult + iRecvd > 65535)							// ensure we don't write past the end of the buffer
 			break;
-		memset(cTransferBuff, 0, 1000);							//reset the transfer buffer
+		memcpy((precvBuff + iRecvd), cTransferBuff, iResult);	// copy the data from transferbuff to receive buffer
+		iRecvd += iResult;
+		if(iResult < 1000)										// if we got less than 1k bytes, break out
+			break;
+		memset(cTransferBuff, 0, 1000);							// reset the transfer buffer
 		
 	}
 
-	//for(int j = 0; j < 4; j++)	//loop through the Precv buff to see what's there
-	//{
-	//	memcpy(cTestBuff, precvBuff, 1000);
-	//	//memset(cTestBuff, 0, 1000);
-	//}
-
 	if (iRecvd > 0)
 	{
-		std::istringstream iss (precvBuff);	// load buff into stream for reading
-		for (i = 0; i < iRecvd; i++)		// Loop to convert a char array to an int array
+		std::istringstream iss (precvBuff);		// load buff into stream for reading
+		while(iss.rdbuf()->in_avail() != 0)		// loop over the values in the string stream until there are no more available; ie. when in_avail returns 0
 		{
-			iss >> intArray[i];
-			int iwhatsthis = intArray[i];
-			if(intArray[i] == 141414)
-				break;
+			iss >> intArray[i];					// each time we loop we read out an int to the array
+			i++;
 		}
-
 		delete [] precvBuff; precvBuff = nullptr;
-		return i;
+		return i;								// return the number of ints read into intArray
 	} 
  
 	delete [] precvBuff;

@@ -23,9 +23,6 @@ Assembly System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c5619
 	hash=None, flags=None
 Assembly Microsoft.VisualC, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a: 
 	hash=None, flags=None
-Class singr_gui.captureWaveform: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
-  :System.Windows.Forms.Form
-    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
 Class singr_gui.changeAxesPopUp: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
   :System.Windows.Forms.Form
     Void .ctor(Double, Double, Double, Double): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
@@ -34,6 +31,9 @@ Class singr_gui.changeAxesPopUp: AutoLayout, AnsiClass, Class, Public, BeforeFie
     getxMax(): PrivateScope, Public, HideBySig
     getyMin(): PrivateScope, Public, HideBySig
     getyMax(): PrivateScope, Public, HideBySig
+Class singr_gui.captureWaveform: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Windows.Forms.Form
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
 Class singr_gui.setCutsPopUp: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
   :System.Windows.Forms.Form
     Void .ctor(Double, Double): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName

@@ -32,6 +32,7 @@ namespace singr_gui {
 		{
 			InitializeComponent();
 			psdCapRun = false;
+			backgroundWorker2->RunWorkerAsync();
 			//findPorts();
 			//
 			//TODO: Add the constructor code here
@@ -63,8 +64,8 @@ namespace singr_gui {
 	private: System::Windows::Forms::ToolStripMenuItem^  changeAxesToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  clearChartToolStripMenuItem;
 	private: System::Windows::Forms::ToolStripMenuItem^  addCutsOnEnergyToolStripMenuItem;
-	private: System::Windows::Forms::CheckBox^  chk_stf;
-	private: System::Windows::Forms::CheckBox^  chk_atf;
+
+
 	private: System::Windows::Forms::TextBox^  tb_baseline;
 	private: System::Windows::Forms::TextBox^  tb_short;
 	private: System::Windows::Forms::TextBox^  tb_long;
@@ -83,6 +84,9 @@ namespace singr_gui {
 	private: System::Windows::Forms::ToolStripMenuItem^  openToolStripMenuItem1;
 	private: System::Windows::Forms::SaveFileDialog^  saveFileDialog1;
 	private: System::ComponentModel::BackgroundWorker^  backgroundWorker1;
+	private: System::ComponentModel::BackgroundWorker^  backgroundWorker2;
+	private: System::Windows::Forms::TextBox^  tb_counterBox;
+
 	public: 
 		// try and declare public variables here
 		static bool continueLooping = true;
@@ -103,6 +107,12 @@ namespace singr_gui {
 	private: ref struct dataForBkgdWorker{
 				 String^ mstrFileName;
 			 };
+	private: array<Int32>^ g_iESpectrumArray;
+	private: array<Int32>^ g_iFOMArray;
+	private: double dSpectrumBinSize;
+	private: double dFOMBinSize;
+	private: int iNumberSpectrumBins;
+	private: int iFOMBins;
 	protected: 
 
 		
@@ -192,8 +202,6 @@ namespace singr_gui {
 			this->neutronDieAwayToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->openToolStripMenuItem1 = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->ch_FOM = (gcnew System::Windows::Forms::DataVisualization::Charting::Chart());
-			this->chk_stf = (gcnew System::Windows::Forms::CheckBox());
-			this->chk_atf = (gcnew System::Windows::Forms::CheckBox());
 			this->tb_baseline = (gcnew System::Windows::Forms::TextBox());
 			this->tb_short = (gcnew System::Windows::Forms::TextBox());
 			this->tb_long = (gcnew System::Windows::Forms::TextBox());
@@ -209,6 +217,8 @@ namespace singr_gui {
 			this->label7 = (gcnew System::Windows::Forms::Label());
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
+			this->backgroundWorker2 = (gcnew System::ComponentModel::BackgroundWorker());
+			this->tb_counterBox = (gcnew System::Windows::Forms::TextBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^  >(this->ch_ESpectrum))->BeginInit();
 			this->menuStrip1->SuspendLayout();
@@ -254,9 +264,9 @@ namespace singr_gui {
 			// 
 			this->b_saveFile->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
 				static_cast<System::Byte>(0)));
-			this->b_saveFile->Location = System::Drawing::Point(936, 603);
+			this->b_saveFile->Location = System::Drawing::Point(1023, 603);
 			this->b_saveFile->Name = L"b_saveFile";
-			this->b_saveFile->Size = System::Drawing::Size(112, 42);
+			this->b_saveFile->Size = System::Drawing::Size(124, 42);
 			this->b_saveFile->TabIndex = 11;
 			this->b_saveFile->Text = L"Choose Save File...";
 			this->b_saveFile->UseVisualStyleBackColor = true;
@@ -510,26 +520,6 @@ namespace singr_gui {
 			this->ch_FOM->TabIndex = 17;
 			this->ch_FOM->Text = L"chart3";
 			// 
-			// chk_stf
-			// 
-			this->chk_stf->AutoSize = true;
-			this->chk_stf->Location = System::Drawing::Point(1054, 603);
-			this->chk_stf->Name = L"chk_stf";
-			this->chk_stf->Size = System::Drawing::Size(107, 17);
-			this->chk_stf->TabIndex = 18;
-			this->chk_stf->Text = L"Save to New File";
-			this->chk_stf->UseVisualStyleBackColor = true;
-			// 
-			// chk_atf
-			// 
-			this->chk_atf->AutoSize = true;
-			this->chk_atf->Location = System::Drawing::Point(1054, 628);
-			this->chk_atf->Name = L"chk_atf";
-			this->chk_atf->Size = System::Drawing::Size(94, 17);
-			this->chk_atf->TabIndex = 19;
-			this->chk_atf->Text = L"Append to File";
-			this->chk_atf->UseVisualStyleBackColor = true;
-			// 
 			// tb_baseline
 			// 
 			this->tb_baseline->Location = System::Drawing::Point(784, 355);
@@ -647,12 +637,28 @@ namespace singr_gui {
 			this->backgroundWorker1->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &Form1::backgroundWorker1_ProgressChanged);
 			this->backgroundWorker1->RunWorkerCompleted += gcnew System::ComponentModel::RunWorkerCompletedEventHandler(this, &Form1::backgroundWorker1_RunWorkerCompleted);
 			// 
+			// backgroundWorker2
+			// 
+			this->backgroundWorker2->WorkerReportsProgress = true;
+			this->backgroundWorker2->WorkerSupportsCancellation = true;
+			this->backgroundWorker2->DoWork += gcnew System::ComponentModel::DoWorkEventHandler(this, &Form1::backgroundWorker2_DoWork);
+			this->backgroundWorker2->ProgressChanged += gcnew System::ComponentModel::ProgressChangedEventHandler(this, &Form1::backgroundWorker2_ProgressChanged);
+			// 
+			// tb_counterBox
+			// 
+			this->tb_counterBox->Location = System::Drawing::Point(1128, 453);
+			this->tb_counterBox->Name = L"tb_counterBox";
+			this->tb_counterBox->ReadOnly = true;
+			this->tb_counterBox->Size = System::Drawing::Size(19, 20);
+			this->tb_counterBox->TabIndex = 33;
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::ControlLight;
 			this->ClientSize = System::Drawing::Size(1160, 681);
+			this->Controls->Add(this->tb_counterBox);
 			this->Controls->Add(this->label7);
 			this->Controls->Add(this->tb_threshold);
 			this->Controls->Add(this->label6);
@@ -666,8 +672,6 @@ namespace singr_gui {
 			this->Controls->Add(this->tb_long);
 			this->Controls->Add(this->tb_short);
 			this->Controls->Add(this->tb_baseline);
-			this->Controls->Add(this->chk_atf);
-			this->Controls->Add(this->chk_stf);
 			this->Controls->Add(this->ch_FOM);
 			this->Controls->Add(this->ch_ESpectrum);
 			this->Controls->Add(this->ch_PSD);
@@ -692,10 +696,10 @@ namespace singr_gui {
 #pragma endregion
 
 private: // Declare class-wide variables here
-	static double m_energyLowerCut = 0;
-	static double m_energyUpperCut = 0;
-	static double m_fomLeftCut = 0;
-	static double m_fomRightCut = 0;
+	static double m_lowerCut = 0;
+	static double m_upperCut = 0;
+	static double m_leftCut = 0;
+	static double m_rightCut = 0;
 
 private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventArgs^  e) {
 			// This section controls what happens when a user clicks b_CapturePSD "Run Selection"
@@ -718,6 +722,38 @@ private: System::Void b_CapturePSD_Click(System::Object^  sender, System::EventA
 			//marshal_context^ context = gcnew marshal_context();
 			//const char * strFileName = context->marshal_as<const char*>(saveFileName);	//convert the filename into something we may pack up and pass to the worker
 			
+			/* Create the arrays for the Energy Spectrum and FOM charts */
+			g_iESpectrumArray = gcnew array<Int32>(1000){};
+			g_iFOMArray = gcnew array<Int32>(1000){};
+
+			/* Determine domain and range for the FOM, Energy Spectrum charts here */ //just declaring the variable here doesn't work for other functions
+			/* Determine the domain and set axes for the spectrum graph */
+			double dPSDXmin = 0.0;
+			double dPSDXmax = 0.0;
+			double dSpectrumDomain = 0.0;
+			double dPSDYmin = 0.0;
+			double dPSDYmax = 0.0;
+			double dFOMRange = 0.0;
+			int iNumberSpectrumBins = 1000.0;
+			int iFOMBins = 100.0;
+			double dSpectrumBinSize = 0.0;
+			double dFOMBinSize = 0.0;
+
+			dPSDXmin = this->ch_PSD->ChartAreas[0]->AxisX->Minimum;			//get the min and max of the PSD chart
+			dPSDXmax = this->ch_PSD->ChartAreas[0]->AxisX->Maximum;
+			this->ch_ESpectrum->ChartAreas[0]->AxisX->Minimum = dPSDXmin;	//set the min and max of the spectrum chart to match
+			this->ch_ESpectrum->ChartAreas[0]->AxisX->Maximum = dPSDXmax;
+			dSpectrumDomain = dPSDXmax - dPSDXmin;							//determine that domain of values
+			dSpectrumBinSize = dSpectrumDomain / iNumberSpectrumBins;					//set the bin size accordingly //currently 1000 bins
+
+			/* Determine the range, set axes, and calculate the bin size for the FOM graph */
+			dPSDYmin = this->ch_PSD->ChartAreas[0]->AxisY->Minimum;
+			dPSDYmax = this->ch_PSD->ChartAreas[0]->AxisY->Maximum;
+			this->ch_FOM->ChartAreas[0]->AxisX->Minimum = dPSDYmin;
+			this->ch_FOM->ChartAreas[0]->AxisX->Maximum = dPSDYmax;
+			dFOMRange = dPSDYmax - dPSDYmin;
+			dFOMBinSize = dFOMRange / iFOMBins;
+
 			/* Pack up the filename to pass to the background worker */
 			dataForBkgdWorker^ s_variables = gcnew dataForBkgdWorker;
 			s_variables->mstrFileName = saveFileName;
@@ -844,6 +880,10 @@ private: System::Void b_SetIntegrationTimes_Click(System::Object^  sender, Syste
 
 private: System::Void clearChartToolStripMenuItem2_Click(System::Object^  sender, System::EventArgs^  e) {
 			 this->ch_PSD->Series["Series1"]->Points->Clear();
+			 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->Clear();
+			 this->ch_PSD->Series["series_EnergyCutRight"]->Points->Clear();
+			 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->Clear();
+			 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->Clear();
 			 this->tb_updates->Text = "PSD chart cleared.";
 			 Application::DoEvents();
 		 }
@@ -944,38 +984,38 @@ private: System::Void addCutsOnEnergyToolStripMenuItem_Click(System::Object^  se
 			 setEnergyCuts->ShowDialog();
 
 			 /* Retrieve the cuts the user entered */
-			 m_fomLeftCut = setEnergyCuts->getCutLower();
-			 m_fomRightCut = setEnergyCuts->getCutUpper();
+			 m_leftCut = setEnergyCuts->getCutLower();
+			 m_rightCut = setEnergyCuts->getCutUpper();
 
 			 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->Clear();
 			 this->ch_PSD->Series["series_EnergyCutRight"]->Points->Clear();
 
-			 if(m_fomLeftCut == 0 && m_fomRightCut == 0)	// No cuts
+			 if(m_leftCut == 0 && m_rightCut == 0)	// No cuts
 			 {
-				 m_fomLeftCut = 0.0;
-				 m_fomRightCut = 0.0;
+				 m_leftCut = 0.0;
+				 m_rightCut = 0.0;
 				 this->tb_updates->Text = "Nocuts chose.";
 				 return;
 			 }
 
-			 if(m_fomLeftCut > 0 && m_fomRightCut > 0)	// Both cuts
+			 if(m_leftCut > 0 && m_rightCut > 0)	// Both cuts
 			 {
-				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_fomLeftCut, psdYmin);
-				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_fomLeftCut, psdYmax);
-				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_fomRightCut, psdYmin);
-				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_fomRightCut, psdYmax);
+				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_leftCut, psdYmin);
+				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_leftCut, psdYmax);
+				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_rightCut, psdYmin);
+				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_rightCut, psdYmax);
 			 }
 
-			 if(m_fomLeftCut == 0 && m_fomRightCut > 0)	// Only Upper cut
+			 if(m_leftCut == 0 && m_rightCut > 0)	// Only Upper cut
 			 {
-				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_fomRightCut, psdYmin);
-				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_fomRightCut, psdYmax);
+				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_rightCut, psdYmin);
+				 this->ch_PSD->Series["series_EnergyCutRight"]->Points->AddXY(m_rightCut, psdYmax);
 			 }
 
-			 if(m_fomLeftCut > 0 && m_fomRightCut == 0)	// Only lower cut
+			 if(m_leftCut > 0 && m_rightCut == 0)	// Only lower cut
 			 {
-				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_fomLeftCut, psdYmin);
-				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_fomLeftCut, psdYmax);
+				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_leftCut, psdYmin);
+				 this->ch_PSD->Series["series_EnergyCutLeft"]->Points->AddXY(m_leftCut, psdYmax);
 			 }
 
 		 }//end of cuts on Energy (vertical)
@@ -998,38 +1038,38 @@ private: System::Void addCutsOnPSDToolStripMenuItem_Click(System::Object^  sende
 			 setpsdRatioCuts->ShowDialog();
 
 			 /* Retrieve the cuts the user entered */
-			 m_energyLowerCut = setpsdRatioCuts->getCutLower();
-			 m_energyUpperCut = setpsdRatioCuts->getCutUpper();
+			 m_lowerCut = setpsdRatioCuts->getCutLower();
+			 m_upperCut = setpsdRatioCuts->getCutUpper();
 
 			 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->Clear();
 			 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->Clear();
 
-			 if(m_energyLowerCut == 0 && m_energyUpperCut == 0)	// No cuts
+			 if(m_lowerCut == 0 && m_upperCut == 0)	// No cuts
 			 {
-				 m_energyLowerCut = 0.0;
-				 m_energyUpperCut = 0.0;
+				 m_lowerCut = 0.0;
+				 m_upperCut = 0.0;
 				 this->tb_updates->Text = "Nocuts chose.";
 				 return;
 			 }
 
-			 if(m_energyLowerCut > 0 && m_energyUpperCut > 0)	// Both cuts
+			 if(m_lowerCut > 0 && m_upperCut > 0)	// Both cuts
 			 {
-				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmin, m_energyLowerCut);
-				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmax, m_energyLowerCut);
-				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmin, m_energyUpperCut);
-				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmax, m_energyUpperCut);
+				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmin, m_lowerCut);
+				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmax, m_lowerCut);
+				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmin, m_upperCut);
+				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmax, m_upperCut);
 			 }
 
-			 if(m_energyLowerCut == 0 && m_energyUpperCut > 0)	// Only Upper cut
+			 if(m_lowerCut == 0 && m_upperCut > 0)	// Only Upper cut
 			 {
-				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmin, m_energyUpperCut);
-				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmax, m_energyUpperCut);
+				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmin, m_upperCut);
+				 this->ch_PSD->Series["series_psdRatioCutUpper"]->Points->AddXY(psdXmax, m_upperCut);
 			 }
 
-			 if(m_energyLowerCut > 0 && m_energyUpperCut == 0)	// Only lower cut
+			 if(m_lowerCut > 0 && m_upperCut == 0)	// Only lower cut
 			 {
-				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmin, m_energyLowerCut);
-				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmax, m_energyLowerCut);
+				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmin, m_lowerCut);
+				 this->ch_PSD->Series["series_psdRatioCutLower"]->Points->AddXY(psdXmax, m_lowerCut);
 			 }
 		 }//end of set cuts on psd ratio (horizontal lines) 
 
@@ -1053,43 +1093,65 @@ private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::
 			/* Variables and Arrays */
 			std::string msg = "a";
 			std::string msgQuit = "q";
+			std::string msgbBuff = "b";
 			std::string strMode = "0";			//choose mode menu
 			std::string enableSystem = "1";		//enable the system
 			std::string strProcessedData = "4";	//choose processed data mode
 			std::string strEther = "9";			//begin
+			int holder(0);
 			int * recvBuffer(nullptr);
-			recvBuffer = new int[8000]();
+			recvBuffer = new int[16384]();
 
 			/* Setup the uZ and begin data transfer */
 			client.Send((char *)strMode.c_str());
+			worker->ReportProgress(-11);	//report mode change
 			Sleep(2000);
 			client.Send((char *)strProcessedData.c_str());
+			worker->ReportProgress(-12);	//report choosing processed data mode
 			Sleep(2000);
 			client.Send((char *)enableSystem.c_str());
+			worker->ReportProgress(-13);	//report system enabled
 			Sleep(2000);
 			client.Send((char *)strEther.c_str());
+			worker->ReportProgress(-14);	//report begin data downlink
 			Sleep(2000);
-			//int imini = client.miniRecv();
-			//worker->ReportProgress(imini);
 
 			while(worker->CancellationPending == false)//until the user hits the capture button twice this will loop
 			{
 				client.Send(msg.c_str());
 
-				int iDataReceived = client.Recv((int *)recvBuffer);
-				if(iDataReceived == 1)
-					continue;
-
-				//need to box up the array into an object
-				array<int>^ recvBufferToPass = gcnew array<int>(iDataReceived);
-				for(int ii = 0; ii < iDataReceived; ++ii)
+				int iDataReceived = client.Recv((int *)recvBuffer);	// iDataReceived gives an int which is the number of ints read into recvBuffer
+				if(iDataReceived == 1)	//we got no data or an error
 				{
-					recvBufferToPass[ii] = recvBuffer[ii];
+					worker->ReportProgress(-1);
+					break;
+				}
+				if(recvBuffer[iDataReceived-2] != 141414)	//we received data, but we have more to receive before passing the array to be sorted and saved
+				{
+					int testnum = recvBuffer[iDataReceived];
+					int testnum2 = recvBuffer[iDataReceived-1];
+					int testnum3 = recvBuffer[iDataReceived-2];
+					worker->ReportProgress(-15);
+					client.Send(msgbBuff.c_str());			// send a "b"
+					holder = client.Recv((int *)(recvBuffer + iDataReceived));	//move the pointer to the receive buffer by the amount of data we already received
+					iDataReceived += holder;				// add holder back in
+				}
+				if(holder == 1 || holder == -1)	//we got no data or an error
+				{
+					worker->ReportProgress(-1);
+					break;
 				}
 
-				worker->ReportProgress(iDataReceived, recvBufferToPass);
+				/*need to box up the array into an object */
+				array<int>^ recvBufferToPass = gcnew array<int>(iDataReceived);
+				for(int ii = 0; ii < (iDataReceived - 1); ++ii)
+				{
+					recvBufferToPass[ii] = *(recvBuffer + ii);
+				}
 
-				int iSortPrintReturn = client.SortPrint(strFileName, (int *)recvBuffer, iDataReceived);
+				worker->ReportProgress((iDataReceived - 1), recvBufferToPass);
+
+				int iSortPrintReturn = client.SortPrint(strFileName, (int *)recvBuffer, (iDataReceived - 1));
 				if(iSortPrintReturn == 414141)
 					worker->ReportProgress(iSortPrintReturn);
 				else
@@ -1098,6 +1160,7 @@ private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::
 
 			client.Send((char *)msgQuit.c_str());
 			Sleep(2000);
+			delete[] recvBuffer; recvBuffer = nullptr;
 
 		 }
 private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender, System::ComponentModel::ProgressChangedEventArgs^  e) 		 
@@ -1109,7 +1172,32 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 			 }
 			 else if(e->ProgressPercentage == -1)
 			 {
-				 this->tb_updates->Text = "Data not saved.";
+				 this->tb_updates->Text = "Error.";
+				 return;
+			 }
+			 else if(e->ProgressPercentage == -11)
+			 {
+				 this->tb_updates->Text = "Changing mode...";
+				 return;
+			 }
+			 else if(e->ProgressPercentage == -12)
+			 {
+				 this->tb_updates->Text = "Choosing processed data mode.";
+				 return;
+			 }
+			 else if(e->ProgressPercentage == -13)
+			 {
+				 this->tb_updates->Text = "System enabled.";
+				 return;
+			 }
+			 else if(e->ProgressPercentage == -14)
+			 {
+				 this->tb_updates->Text = "Beginning data downlink.";
+				 return;
+			 }
+			 else if(e->ProgressPercentage == -15)
+			 {
+				 this->tb_updates->Text = "Sending 'b' to get the rest of the data.";
 				 return;
 			 }
 			 else
@@ -1121,7 +1209,7 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 			 double si(0); double li(0); double fi(0);
 			 double psd(0);
 			 double energy(0);
-			 
+
 			 /* unpack the values from the array so we may plot them */
 			 array<int>^ recvBufferPassed = safe_cast<array<int>^>(e->UserState);
 
@@ -1154,21 +1242,75 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 					 break;
 				 }	//end of switch
 
-				 //put code for the energy spectrum chart here
-				 double dESpectrumBinSize = (200000 - 0) / 1000; //psdXmax - psdXmin / numbins
+				 /* sort energy into Energy Spectrum bins */
+				 //double dESpectrumBinSize = (200000 - 0) / 1000; //psdXmax - psdXmin / numbins
 				 double dESpectrumBin(0.0);
-				 int iESpectrumArray[1000] = {};
+				 double dFOMBin(0.0);
+				 double dFOMBinSize = (0.0);
 				 int iESpectrumArrayIndex(0);
+				 int iFOMArrayIndex(0);
 
-				 iESpectrumArrayIndex = static_cast<int>(energy / dESpectrumBinSize);	//check data is within the spectrum bins
-				 if(iESpectrumArrayIndex >= 0 && iESpectrumArrayIndex < 1000)
-					 ++iESpectrumArray[iESpectrumArrayIndex];
-
-				 this->ch_ESpectrum->Series["Series1"]->Points->Clear();   
-				 for(int jj = 0; jj < 999; jj++)
+				 iESpectrumArrayIndex = static_cast<int>(energy / dSpectrumBinSize);	//check data is within the spectrum bins
+				 iFOMArrayIndex = static_cast<int>(psd / dFOMBinSize);
+				 if((iESpectrumArrayIndex >= 0 && iESpectrumArrayIndex < 1000) && (iFOMArrayIndex >= 0 && iFOMArrayIndex < 99))	//if the point is within the array (on the chart)
 				 {
-					 dESpectrumBin = dESpectrumBinSize * (jj + 0.5);
-					 this->ch_ESpectrum->Series["Series1"]->Points->AddXY(dESpectrumBin, iESpectrumArray[jj]);
+					 if(m_lowerCut > 0 || m_upperCut > 0 || m_leftCut > 0 || m_rightCut > 0)	//see if the user made cuts
+					 {
+						 //the user has made cuts
+						 //now we require the point (energy, psd) to be inside those cuts
+						 if((m_upperCut > 0) && (m_rightCut > 0))		//we have an upper and right cut
+						 {
+							 if((energy >= m_leftCut && energy <= m_rightCut) && (psd >= m_lowerCut && psd <= m_upperCut))
+							 {
+								 ++g_iESpectrumArray[iESpectrumArrayIndex];
+								 ++g_iFOMArray[iFOMArrayIndex];
+							 }
+						 }
+						 else if((m_upperCut > 0) && (m_rightCut == 0))	//we have an upper and no right cut
+						 {
+ 							 if((energy >= m_leftCut) && (psd >= m_lowerCut && psd <= m_upperCut))		//any energy above cut left will do, psd below/within cuts
+							 {
+								 ++g_iESpectrumArray[iESpectrumArrayIndex];
+								 ++g_iFOMArray[iFOMArrayIndex];
+							 }
+						 }
+						 else if((m_upperCut == 0) && (m_rightCut > 0))	//we have a right cut and no upper cut
+						 {
+ 							 if((energy >= m_leftCut && energy <= m_rightCut) && (psd >= m_lowerCut))	//any psd above lower cut will do, energy below/within cuts
+							 {
+								 ++g_iESpectrumArray[iESpectrumArrayIndex];
+								 ++g_iFOMArray[iFOMArrayIndex];
+							 }
+						 }
+						 else										//only lower/left cuts
+						 {
+							 if((energy >= m_leftCut) && (psd >= m_lowerCut))		//any psd and energy above minimums
+							 {
+								 ++g_iESpectrumArray[iESpectrumArrayIndex];
+								 ++g_iFOMArray[iFOMArrayIndex];
+							 }
+						 }
+					 }
+					 else	//if the user did not make cuts, but the point is within the bins
+					 {
+						 ++g_iESpectrumArray[iESpectrumArrayIndex];
+						 ++g_iFOMArray[iFOMArrayIndex];		
+					 }
+				 }
+
+				 /* clear charts and plot the arrays */
+				 this->ch_ESpectrum->Series["Series1"]->Points->Clear();   
+				 this->ch_FOM->Series["Series1"]->Points->Clear();
+
+				 for(int jj = 0; jj < (iNumberSpectrumBins - 1); jj++)
+				 {
+					 dESpectrumBin = dSpectrumBinSize * (jj + 0.5);
+					 this->ch_ESpectrum->Series["Series1"]->Points->AddXY(dESpectrumBin, g_iESpectrumArray[jj]);
+				 }
+				 for(int ii = 0; ii < (iFOMBins - 1); ii++)
+				 {
+					 dFOMBin = dFOMBinSize * (ii + 0.5);
+					 this->ch_FOM->Series["Series1"]->Points->AddXY(dFOMBin, g_iFOMArray[ii]);
 				 }
 			 }
 
@@ -1179,6 +1321,23 @@ private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^  send
 				 this->tb_updates->Text = "Worker successfully cancelled.";
 			 else if(e->Error != nullptr)
 				 MessageBox::Show(e->Error->Message);			 
+		 }
+private: System::Void backgroundWorker2_DoWork(System::Object^  sender, System::ComponentModel::DoWorkEventArgs^  e) {
+			 BackgroundWorker^ counterWorker = dynamic_cast<BackgroundWorker^>(sender);
+			 int counter(0);
+
+			 while(1)
+			 {
+				 Sleep(500);
+				 counterWorker->ReportProgress(counter);
+				 counter++;
+				 if(counter > 9)	//if the counter goes to 10, reset it to 0
+					 counter = 0;	//ie. we loop 0 - 9 -> 0 - 9
+			 }
+
+		 }
+private: System::Void backgroundWorker2_ProgressChanged(System::Object^  sender, System::ComponentModel::ProgressChangedEventArgs^  e) {
+			 this->tb_counterBox->Text = e->ProgressPercentage + " ";
 		 }
 };	// leave semi-colon, closes public ref class Form1, line 25
 }	// eof, closes namespace singr_gui, line 10
