@@ -134,9 +134,6 @@ int main()
 	XGpioPs_SetDirectionPin(&Gpio, SW_BREAK_GPIO, 1);
 	// *********** Setup the Hardware Reset MIO ****************//
 
-	//test code
-	xil_printf("I'm working\r\n");
-
 	// ******************* POLLING LOOP *******************//
 	while(1){
 		sw = 0;   //  stop switch reset to 0
