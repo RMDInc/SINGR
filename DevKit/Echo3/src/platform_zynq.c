@@ -55,10 +55,10 @@
 #include "xparameters_ps.h"	/* defines XPAR values */
 #include "xil_cache.h"
 #include "xscugic.h"
-#include "lwip/tcp.h"
+//#include "lwip/tcp.h"
 #include "xil_printf.h"
 #include "platform_config.h"
-#include "netif/xadapter.h"
+//#include "netif/xadapter.h"
 #ifdef PLATFORM_ZYNQ
 #include "xscutimer.h"
 
@@ -131,7 +131,7 @@ timer_callback(XScuTimer * TimerInstance)
 	 */
 #ifndef USE_SOFTETH_ON_ZYNQ
 	if (ResetRxCntr >= RESET_RX_CNTR_LIMIT) {
-		xemacpsif_resetrx_on_no_rxdata(echo_netif);
+//		xemacpsif_resetrx_on_no_rxdata(echo_netif);
 		ResetRxCntr = 0;
 	}
 #endif
