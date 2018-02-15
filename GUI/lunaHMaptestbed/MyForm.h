@@ -1040,6 +1040,11 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 		s_variables->mstrFileName = this->saveFileDialog1->FileName;
 	}
 
+	this->serialPort1->WriteLine("0");	//choose change mode from main menu
+	Sleep(500);
+	this->serialPort1->WriteLine("4");	//choose processed data mode
+	Sleep(500);
+
 	/* Determine domain and range for the FOM, Energy Spectrum charts here */
 	double dPSDXmin = 0.0;
 	double dPSDXmax = 0.0;
