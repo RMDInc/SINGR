@@ -9,3 +9,8 @@ Version 2.01	- Cleaned up the github repo a lot; untracked many files; fixed loo
  Version 2.10	- This is a release version of the devkit and the GUI. This version (2.10) matches up with the GUI version (2.10). This software is what was used at Goddard SFC in August/September of 2017. This software set (devkit + GUI) were also used in tests at Mass General Hospital in their beamline.
 	+ The devkit takes serial input from the GUI and performs the appropriate action. See the source code for more information; I hope to release a small write up with the serial commands in the future, but in the mean time, the source code comments and email may be the easiest way to get this information. 
 	+ Many changes have been implemented since this code was uploaded; the main menu options have mostly stayed the same, but now all modes of data acquisition are available. 
+3-1-2018
+Version 2.11	- Removed an aesthetic feature. This version is the same a version 2.10
+
+3-1-2018
+Version 2.12	- Changed the start up value of the full integral to allow the integration times to be set upon start up. Without this change, the system would not output data, only 0's, until the integration times were set. This has been corrected with this update.
