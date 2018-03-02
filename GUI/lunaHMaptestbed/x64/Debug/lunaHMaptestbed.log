@@ -1,5 +1,3 @@
 ﻿  MyForm.cpp
-  captureWaveformsPopup.cpp
-  Generating Code...
   captureWaveformsPopup.obj : /DEBUG:FASTLINK is not supported when managed code is present; restarting link with /DEBUG:FULL
-  lunaHMaptestbed.vcxproj -> C:\Users\GStoddard\Desktop\G_Singr-master\G_Singr-master\luna-singr_fusion_gui\GUI\x64\Debug\lunaHMaptestbed.exe
+  lunaHMaptestbed.vcxproj -> C:\Users\GStoddard\Desktop\singr_update\GUI\x64\Debug\lunaHMaptestbed.exe

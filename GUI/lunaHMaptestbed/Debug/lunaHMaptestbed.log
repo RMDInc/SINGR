@@ -1,1 +1,3 @@
-﻿  lunaHMaptestbed.vcxproj -> C:\Users\GStoddard\Desktop\singr_update\GUI\Debug\lunaHMaptestbed.exe
+﻿  MyForm.cpp
+  captureWaveformsPopup.obj : /DEBUG:FASTLINK is not supported when managed code is present; restarting link with /DEBUG:FULL
+  lunaHMaptestbed.vcxproj -> C:\Users\GStoddard\Desktop\singr_update\GUI\Debug\lunaHMaptestbed.exe

@@ -1,0 +1,2 @@
+Version 2.13
+3-2-2018 - This version is the fully built version of the previous one. Version 2.12 had errors with going out-of-bounds in an internal array due to never finding the event identifier in received data. This caused the system to crash. The reason for this was improper error handling, but has been fixed. Further, the system now properly sets the mode before requesting data and handles the previously mentioned error better. The release versions (x64, x86) are built and may be used.

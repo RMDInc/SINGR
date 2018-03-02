@@ -1472,6 +1472,11 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 			break;								
 		}
 		index++;								//if no, keep searching
+		if (index > 12288)
+		{
+			this->tb_updates->Text = "No data found. Please check settings.";
+			break;
+		}
 	}
 
 	while (index < DATABUFFER_SIZE)	//for sorting data //comment while verifying that we get data
