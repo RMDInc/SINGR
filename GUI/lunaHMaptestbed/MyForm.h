@@ -120,6 +120,7 @@ namespace lunaHMaptestbed {
 	private: ref struct dataForBkgdWorker {
 		String^ mstrFileName;
 		String^ portName;
+		int refresh_rate;
 	};
 	private: static array<Int32>^ g_iESpectrumArray = gcnew array<Int32>(1000) {};
 	private: static array<Int32>^ g_iFOMArray = gcnew array<Int32>(100) {};
@@ -198,6 +199,9 @@ private: System::Windows::Forms::CheckBox^  checkBox4;
 private: System::Windows::Forms::CheckBox^  checkBox2;
 private: System::Windows::Forms::Label^  label9;
 private: System::Windows::Forms::TextBox^  tb_startTime;
+private: System::Windows::Forms::Label^  label10;
+private: System::Windows::Forms::Label^  label11;
+private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 
 
 
@@ -293,6 +297,9 @@ private: System::Windows::Forms::TextBox^  tb_startTime;
 			this->checkBox2 = (gcnew System::Windows::Forms::CheckBox());
 			this->label9 = (gcnew System::Windows::Forms::Label());
 			this->tb_startTime = (gcnew System::Windows::Forms::TextBox());
+			this->label10 = (gcnew System::Windows::Forms::Label());
+			this->label11 = (gcnew System::Windows::Forms::Label());
+			this->tb_refresh_rate = (gcnew System::Windows::Forms::TextBox());
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_Spectrum))->BeginInit();
@@ -788,7 +795,7 @@ private: System::Windows::Forms::TextBox^  tb_startTime;
 			// checkBox1
 			// 
 			this->checkBox1->AutoSize = true;
-			this->checkBox1->Location = System::Drawing::Point(974, 529);
+			this->checkBox1->Location = System::Drawing::Point(1140, 522);
 			this->checkBox1->Name = L"checkBox1";
 			this->checkBox1->Size = System::Drawing::Size(80, 17);
 			this->checkBox1->TabIndex = 53;
@@ -798,7 +805,7 @@ private: System::Windows::Forms::TextBox^  tb_startTime;
 			// checkBox3
 			// 
 			this->checkBox3->AutoSize = true;
-			this->checkBox3->Location = System::Drawing::Point(1087, 529);
+			this->checkBox3->Location = System::Drawing::Point(1140, 551);
 			this->checkBox3->Name = L"checkBox3";
 			this->checkBox3->Size = System::Drawing::Size(80, 17);
 			this->checkBox3->TabIndex = 55;
@@ -808,7 +815,7 @@ private: System::Windows::Forms::TextBox^  tb_startTime;
 			// checkBox4
 			// 
 			this->checkBox4->AutoSize = true;
-			this->checkBox4->Location = System::Drawing::Point(1114, 553);
+			this->checkBox4->Location = System::Drawing::Point(1140, 565);
 			this->checkBox4->Name = L"checkBox4";
 			this->checkBox4->Size = System::Drawing::Size(80, 17);
 			this->checkBox4->TabIndex = 56;
@@ -818,7 +825,7 @@ private: System::Windows::Forms::TextBox^  tb_startTime;
 			// checkBox2
 			// 
 			this->checkBox2->AutoSize = true;
-			this->checkBox2->Location = System::Drawing::Point(1001, 552);
+			this->checkBox2->Location = System::Drawing::Point(1140, 536);
 			this->checkBox2->Name = L"checkBox2";
 			this->checkBox2->Size = System::Drawing::Size(80, 17);
 			this->checkBox2->TabIndex = 54;
@@ -842,11 +849,40 @@ private: System::Windows::Forms::TextBox^  tb_startTime;
 			this->tb_startTime->Size = System::Drawing::Size(198, 20);
 			this->tb_startTime->TabIndex = 57;
 			// 
+			// label10
+			// 
+			this->label10->AutoSize = true;
+			this->label10->Location = System::Drawing::Point(960, 526);
+			this->label10->Name = L"label10";
+			this->label10->Size = System::Drawing::Size(96, 13);
+			this->label10->TabIndex = 59;
+			this->label10->Text = L"Data Refresh Rate";
+			// 
+			// label11
+			// 
+			this->label11->AutoSize = true;
+			this->label11->Location = System::Drawing::Point(1016, 545);
+			this->label11->Name = L"label11";
+			this->label11->Size = System::Drawing::Size(47, 13);
+			this->label11->TabIndex = 60;
+			this->label11->Text = L"seconds";
+			// 
+			// tb_refresh_rate
+			// 
+			this->tb_refresh_rate->Location = System::Drawing::Point(963, 542);
+			this->tb_refresh_rate->Name = L"tb_refresh_rate";
+			this->tb_refresh_rate->Size = System::Drawing::Size(47, 20);
+			this->tb_refresh_rate->TabIndex = 61;
+			this->tb_refresh_rate->Text = L"60";
+			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1223, 673);
+			this->Controls->Add(this->tb_refresh_rate);
+			this->Controls->Add(this->label11);
+			this->Controls->Add(this->label10);
 			this->Controls->Add(this->label9);
 			this->Controls->Add(this->tb_startTime);
 			this->Controls->Add(this->checkBox4);
@@ -1023,8 +1059,16 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 		this->tb_updates->Text = "Select a port above.";
 		return;
 	}
-	else
-		s_variables->portName = this->comboBox1->Text;
+	else {
+		if (!this->serialPort1->IsOpen) {
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+		}
+		else
+			this->tb_updates->Text = (this->comboBox1->Text) + " is already open.";
+	}
+		
+	s_variables->portName = this->comboBox1->Text;
 	
 	if (psdCap_run && (chk_atf->Checked || chk_stf->Checked))	//if we are running and one of the check buttons is checked, get the file name to pass
 	{
@@ -1039,6 +1083,8 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 		/* Get the filename */
 		s_variables->mstrFileName = this->saveFileDialog1->FileName;
 	}
+
+	s_variables->refresh_rate = System::Int32::Parse(this->tb_refresh_rate->Text);
 
 	this->serialPort1->WriteLine("0");	//choose change mode from main menu
 	Sleep(500);
@@ -1344,9 +1390,11 @@ private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::
 	//do work
 	BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
 
+	int refresh_rate = 60;
 	std::string str_fileName;
 	std::string str_portName;
 	std::ofstream outputFile;
+	refresh_rate = safe_cast<dataForBkgdWorker^>(e->Argument)->refresh_rate;
 	String^ portname = safe_cast<dataForBkgdWorker^>(e->Argument)->portName;
 	String^ filename = safe_cast<dataForBkgdWorker^>(e->Argument)->mstrFileName;
 	str_fileName = msclr::interop::marshal_as<std::string>(filename);
@@ -1386,7 +1434,7 @@ private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::
 
 	while (worker->CancellationPending == false)
 	{
-		Sleep(60000);	//ask for data every few seconds, depending on how fast reading back is 
+		Sleep(refresh_rate);	//ask for data every few seconds, depending on how fast reading back is 
 		if (serialPort1->IsOpen)
 		{
 			serialPort1->WriteLine("a\r");
@@ -1574,6 +1622,11 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	int i_long = int::Parse(this->tb_long->Text);
 	int i_full = int::Parse(this->tb_full->Text);
 
+	//testing variables, delete
+	int i_short_samples = 0; double d_short_samples_convert = 0.0;
+	int i_long_samples = 0; double d_long_samples_convert = 0.0;
+	int i_full_samples = 0; double d_full_samples_convert = 0.0;
+
 	this->tb_updates->Text = "Processing.";
 	this->checkBox2->Checked = true;
 
@@ -1593,6 +1646,15 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 		else
 			bl_avg = (bl4 + bl3 + bl2 + bl1) / 4.0;
 		aablavgArray[eventIndex] = bl_avg;
+
+		//testing, delete
+		i_short_samples = ((i_short + 52) / 4) + 38;
+		i_long_samples = ((i_long + 52) / 4) + 38;
+		i_full_samples = ((i_full + 52) / 4) + 38;
+		d_short_samples_convert = (double)i_short_samples;
+		d_long_samples_convert = (double)i_long_samples;
+		d_full_samples_convert = (double)i_full_samples;
+
 		si = eventsSorted[eventIndex].aaShortInt / 16.0 - (bl_avg * (((i_short + 52) / 4) + 38));
 		li = eventsSorted[eventIndex].aaLongInt / 16.0 - (bl_avg * (((i_long + 52) / 4) + 38));
 		fi = eventsSorted[eventIndex].aaFullInt / 16.0 - (bl_avg * (((i_full + 52) / 4) + 38));
