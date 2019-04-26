@@ -1,6 +1,12 @@
 #pragma once
 
+//TESTING ethernet includes //this compiles 4/24 @ 17:17
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+//END TESTING ethernet includes
+
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -15,8 +21,17 @@
 #include "changeAxesPopUp.h"
 #include "setEnergyCutsPopUp.h"
 
-#define BINARY_DATABUFFER_SIZE	49152
+#include <vcclr.h>	//TEST
+
+//This tells the linker to add the following libraries to the list of library dependencies with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
+//If we get rid of the following lines, the libraries must be added into the project properties at Linker->Input->Additional dependencies
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
+
 #define DATABUFFER_SIZE			12288
+#define DATA_BUFLEN				49152
+#define DEFAULT_PORT			"7"
 
 value struct EventData
 {
@@ -44,7 +59,6 @@ value struct EventData
 };
 
 namespace lunaHMaptestbed {
-
 	using namespace System;
 	using namespace System::ComponentModel;
 	using namespace System::Collections;
@@ -55,6 +69,11 @@ namespace lunaHMaptestbed {
 
 	/// <summary>
 	/// Summary for MyForm
+	/// When we start the GUI this is the constructor for the entire GUI
+	/// To run functions, utilities when it is started/created, write the code below, then call them here
+	/// FindPorts() is an example of this, as well as runWorkerAsync() which starts a worker thread when the
+	///  GUI starts.
+	/// This is also a good place to set global variables; they can/should be declared above/below here.
 	/// </summary>
 	public ref class MyForm : public System::Windows::Forms::Form
 	{
@@ -64,7 +83,9 @@ namespace lunaHMaptestbed {
 			InitializeComponent();
 			findPorts();
 			psdCap_run = false;
+			connected_to_server = false;
 			backgroundWorker2->RunWorkerAsync();
+
 			//
 			//TODO: Add the constructor code here
 			//
@@ -113,14 +134,14 @@ namespace lunaHMaptestbed {
 
 	private: System::Windows::Forms::Label^  label6;
 
-
+	//"global" variables declared here
 	private: bool psdCap_run;
+	private: bool connected_to_server;
 	private: array<unsigned int>^ g_dataBuffer;
 	private: array<unsigned char>^ g_binaryDataBuffer;
 	private: ref struct dataForBkgdWorker {
 		String^ mstrFileName;
 		String^ portName;
-		int refresh_rate;
 	};
 	private: static array<Int32>^ g_iESpectrumArray = gcnew array<Int32>(1000) {};
 	private: static array<Int32>^ g_iFOMArray = gcnew array<Int32>(100) {};
@@ -199,9 +220,20 @@ private: System::Windows::Forms::CheckBox^  checkBox4;
 private: System::Windows::Forms::CheckBox^  checkBox2;
 private: System::Windows::Forms::Label^  label9;
 private: System::Windows::Forms::TextBox^  tb_startTime;
+private: System::Windows::Forms::Button^  b_transferDataFile;
+private: System::Windows::Forms::Button^  b_deleteDataFile;
+private: System::Windows::Forms::SaveFileDialog^  saveFileDialog_TXFile;
 private: System::Windows::Forms::Label^  label10;
+private: System::Windows::Forms::TextBox^  tb_TXFileLocation;
+private: System::Windows::Forms::ProgressBar^  progbar_TX;
+
 private: System::Windows::Forms::Label^  label11;
-private: System::Windows::Forms::TextBox^  tb_refresh_rate;
+
+
+
+
+
+
 
 
 
@@ -297,9 +329,13 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			this->checkBox2 = (gcnew System::Windows::Forms::CheckBox());
 			this->label9 = (gcnew System::Windows::Forms::Label());
 			this->tb_startTime = (gcnew System::Windows::Forms::TextBox());
+			this->b_transferDataFile = (gcnew System::Windows::Forms::Button());
+			this->b_deleteDataFile = (gcnew System::Windows::Forms::Button());
+			this->saveFileDialog_TXFile = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->label10 = (gcnew System::Windows::Forms::Label());
+			this->tb_TXFileLocation = (gcnew System::Windows::Forms::TextBox());
+			this->progbar_TX = (gcnew System::Windows::Forms::ProgressBar());
 			this->label11 = (gcnew System::Windows::Forms::Label());
-			this->tb_refresh_rate = (gcnew System::Windows::Forms::TextBox());
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_Spectrum))->BeginInit();
@@ -308,21 +344,21 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// serialPort1
 			// 
-			this->serialPort1->BaudRate = 115200;
+			this->serialPort1->BaudRate = 921600;
 			// 
 			// comboBox1
 			// 
 			this->comboBox1->DropDownStyle = System::Windows::Forms::ComboBoxStyle::DropDownList;
 			this->comboBox1->FormattingEnabled = true;
-			this->comboBox1->Location = System::Drawing::Point(1075, 394);
+			this->comboBox1->Location = System::Drawing::Point(784, 377);
 			this->comboBox1->Name = L"comboBox1";
-			this->comboBox1->Size = System::Drawing::Size(139, 21);
+			this->comboBox1->Size = System::Drawing::Size(97, 21);
 			this->comboBox1->TabIndex = 9;
 			// 
 			// label6
 			// 
 			this->label6->AutoSize = true;
-			this->label6->Location = System::Drawing::Point(1016, 397);
+			this->label6->Location = System::Drawing::Point(725, 381);
 			this->label6->Name = L"label6";
 			this->label6->Size = System::Drawing::Size(53, 13);
 			this->label6->TabIndex = 27;
@@ -338,7 +374,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			});
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
-			this->menuStrip1->Size = System::Drawing::Size(1223, 24);
+			this->menuStrip1->Size = System::Drawing::Size(1269, 24);
 			this->menuStrip1->TabIndex = 28;
 			this->menuStrip1->Text = L"menuStrip1";
 			// 
@@ -586,15 +622,15 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			series7->CustomProperties = L"PointWidth=0.01";
 			series7->Name = L"Series1";
 			this->ch_FOM->Series->Add(series7);
-			this->ch_FOM->Size = System::Drawing::Size(488, 343);
+			this->ch_FOM->Size = System::Drawing::Size(531, 343);
 			this->ch_FOM->TabIndex = 31;
 			this->ch_FOM->Text = L"chart1";
 			// 
 			// b_SetIntegrationTimes
 			// 
-			this->b_SetIntegrationTimes->Location = System::Drawing::Point(761, 488);
+			this->b_SetIntegrationTimes->Location = System::Drawing::Point(903, 471);
 			this->b_SetIntegrationTimes->Name = L"b_SetIntegrationTimes";
-			this->b_SetIntegrationTimes->Size = System::Drawing::Size(140, 41);
+			this->b_SetIntegrationTimes->Size = System::Drawing::Size(152, 41);
 			this->b_SetIntegrationTimes->TabIndex = 32;
 			this->b_SetIntegrationTimes->Text = L"Set Integration Times";
 			this->b_SetIntegrationTimes->UseVisualStyleBackColor = true;
@@ -602,36 +638,36 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// tb_baseline
 			// 
-			this->tb_baseline->Location = System::Drawing::Point(791, 381);
+			this->tb_baseline->Location = System::Drawing::Point(961, 378);
 			this->tb_baseline->Name = L"tb_baseline";
-			this->tb_baseline->Size = System::Drawing::Size(140, 20);
+			this->tb_baseline->Size = System::Drawing::Size(94, 20);
 			this->tb_baseline->TabIndex = 33;
 			// 
 			// tb_short
 			// 
-			this->tb_short->Location = System::Drawing::Point(791, 408);
+			this->tb_short->Location = System::Drawing::Point(961, 401);
 			this->tb_short->Name = L"tb_short";
-			this->tb_short->Size = System::Drawing::Size(140, 20);
+			this->tb_short->Size = System::Drawing::Size(94, 20);
 			this->tb_short->TabIndex = 34;
 			// 
 			// tb_long
 			// 
-			this->tb_long->Location = System::Drawing::Point(791, 435);
+			this->tb_long->Location = System::Drawing::Point(962, 422);
 			this->tb_long->Name = L"tb_long";
-			this->tb_long->Size = System::Drawing::Size(140, 20);
+			this->tb_long->Size = System::Drawing::Size(93, 20);
 			this->tb_long->TabIndex = 35;
 			// 
 			// tb_full
 			// 
-			this->tb_full->Location = System::Drawing::Point(791, 462);
+			this->tb_full->Location = System::Drawing::Point(961, 445);
 			this->tb_full->Name = L"tb_full";
-			this->tb_full->Size = System::Drawing::Size(140, 20);
+			this->tb_full->Size = System::Drawing::Size(94, 20);
 			this->tb_full->TabIndex = 36;
 			// 
 			// label1
 			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(730, 387);
+			this->label1->Location = System::Drawing::Point(900, 384);
 			this->label1->Name = L"label1";
 			this->label1->Size = System::Drawing::Size(47, 13);
 			this->label1->TabIndex = 37;
@@ -640,7 +676,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// label2
 			// 
 			this->label2->AutoSize = true;
-			this->label2->Location = System::Drawing::Point(730, 411);
+			this->label2->Location = System::Drawing::Point(900, 404);
 			this->label2->Name = L"label2";
 			this->label2->Size = System::Drawing::Size(47, 13);
 			this->label2->TabIndex = 38;
@@ -649,7 +685,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// label3
 			// 
 			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(730, 438);
+			this->label3->Location = System::Drawing::Point(901, 425);
 			this->label3->Name = L"label3";
 			this->label3->Size = System::Drawing::Size(46, 13);
 			this->label3->TabIndex = 39;
@@ -658,7 +694,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// label4
 			// 
 			this->label4->AutoSize = true;
-			this->label4->Location = System::Drawing::Point(730, 465);
+			this->label4->Location = System::Drawing::Point(900, 448);
 			this->label4->Name = L"label4";
 			this->label4->Size = System::Drawing::Size(38, 13);
 			this->label4->TabIndex = 40;
@@ -666,7 +702,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// label5
 			// 
-			this->label5->Location = System::Drawing::Point(729, 539);
+			this->label5->Location = System::Drawing::Point(725, 401);
 			this->label5->Name = L"label5";
 			this->label5->Size = System::Drawing::Size(63, 31);
 			this->label5->TabIndex = 41;
@@ -675,16 +711,16 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// tb_trigger
 			// 
-			this->tb_trigger->Location = System::Drawing::Point(791, 545);
+			this->tb_trigger->Location = System::Drawing::Point(787, 407);
 			this->tb_trigger->Name = L"tb_trigger";
-			this->tb_trigger->Size = System::Drawing::Size(140, 20);
+			this->tb_trigger->Size = System::Drawing::Size(94, 20);
 			this->tb_trigger->TabIndex = 42;
 			// 
 			// b_SetThreshold
 			// 
-			this->b_SetThreshold->Location = System::Drawing::Point(761, 573);
+			this->b_SetThreshold->Location = System::Drawing::Point(728, 435);
 			this->b_SetThreshold->Name = L"b_SetThreshold";
-			this->b_SetThreshold->Size = System::Drawing::Size(140, 41);
+			this->b_SetThreshold->Size = System::Drawing::Size(153, 41);
 			this->b_SetThreshold->TabIndex = 43;
 			this->b_SetThreshold->Text = L"Set Trigger Threshold";
 			this->b_SetThreshold->UseVisualStyleBackColor = true;
@@ -692,16 +728,16 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// tb_updates
 			// 
-			this->tb_updates->Location = System::Drawing::Point(1016, 447);
+			this->tb_updates->Location = System::Drawing::Point(919, 616);
 			this->tb_updates->Name = L"tb_updates";
 			this->tb_updates->ReadOnly = true;
-			this->tb_updates->Size = System::Drawing::Size(198, 20);
+			this->tb_updates->Size = System::Drawing::Size(338, 20);
 			this->tb_updates->TabIndex = 44;
 			// 
 			// label7
 			// 
 			this->label7->AutoSize = true;
-			this->label7->Location = System::Drawing::Point(960, 450);
+			this->label7->Location = System::Drawing::Point(860, 619);
 			this->label7->Name = L"label7";
 			this->label7->Size = System::Drawing::Size(50, 13);
 			this->label7->TabIndex = 45;
@@ -709,9 +745,9 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// b_capturePSD
 			// 
-			this->b_capturePSD->Location = System::Drawing::Point(1019, 473);
+			this->b_capturePSD->Location = System::Drawing::Point(904, 543);
 			this->b_capturePSD->Name = L"b_capturePSD";
-			this->b_capturePSD->Size = System::Drawing::Size(140, 41);
+			this->b_capturePSD->Size = System::Drawing::Size(151, 41);
 			this->b_capturePSD->TabIndex = 46;
 			this->b_capturePSD->Text = L"Capture PSD";
 			this->b_capturePSD->UseVisualStyleBackColor = true;
@@ -719,7 +755,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// b_saveFile
 			// 
-			this->b_saveFile->Location = System::Drawing::Point(974, 589);
+			this->b_saveFile->Location = System::Drawing::Point(733, 574);
 			this->b_saveFile->Name = L"b_saveFile";
 			this->b_saveFile->Size = System::Drawing::Size(107, 41);
 			this->b_saveFile->TabIndex = 47;
@@ -730,7 +766,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// chk_stf
 			// 
 			this->chk_stf->AutoSize = true;
-			this->chk_stf->Location = System::Drawing::Point(1087, 591);
+			this->chk_stf->Location = System::Drawing::Point(733, 535);
 			this->chk_stf->Name = L"chk_stf";
 			this->chk_stf->Size = System::Drawing::Size(107, 17);
 			this->chk_stf->TabIndex = 48;
@@ -742,7 +778,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			this->chk_atf->AutoSize = true;
 			this->chk_atf->Checked = true;
 			this->chk_atf->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->chk_atf->Location = System::Drawing::Point(1087, 613);
+			this->chk_atf->Location = System::Drawing::Point(733, 551);
 			this->chk_atf->Name = L"chk_atf";
 			this->chk_atf->Size = System::Drawing::Size(94, 17);
 			this->chk_atf->TabIndex = 49;
@@ -754,7 +790,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			this->tb_savefilename->Location = System::Drawing::Point(725, 642);
 			this->tb_savefilename->Name = L"tb_savefilename";
 			this->tb_savefilename->ReadOnly = true;
-			this->tb_savefilename->Size = System::Drawing::Size(489, 20);
+			this->tb_savefilename->Size = System::Drawing::Size(532, 20);
 			this->tb_savefilename->TabIndex = 50;
 			// 
 			// label8
@@ -776,7 +812,7 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// tb_counterbox
 			// 
-			this->tb_counterbox->Location = System::Drawing::Point(1174, 473);
+			this->tb_counterbox->Location = System::Drawing::Point(1060, 554);
 			this->tb_counterbox->Name = L"tb_counterbox";
 			this->tb_counterbox->ReadOnly = true;
 			this->tb_counterbox->Size = System::Drawing::Size(20, 20);
@@ -795,47 +831,47 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// checkBox1
 			// 
 			this->checkBox1->AutoSize = true;
-			this->checkBox1->Location = System::Drawing::Point(1140, 522);
+			this->checkBox1->Location = System::Drawing::Point(1086, 551);
 			this->checkBox1->Name = L"checkBox1";
-			this->checkBox1->Size = System::Drawing::Size(80, 17);
+			this->checkBox1->Size = System::Drawing::Size(83, 17);
 			this->checkBox1->TabIndex = 53;
-			this->checkBox1->Text = L"checkBox1";
+			this->checkBox1->Text = L"Data Sorted";
 			this->checkBox1->UseVisualStyleBackColor = true;
 			// 
 			// checkBox3
 			// 
 			this->checkBox3->AutoSize = true;
-			this->checkBox3->Location = System::Drawing::Point(1140, 551);
+			this->checkBox3->Location = System::Drawing::Point(1174, 551);
 			this->checkBox3->Name = L"checkBox3";
-			this->checkBox3->Size = System::Drawing::Size(80, 17);
+			this->checkBox3->Size = System::Drawing::Size(61, 17);
 			this->checkBox3->TabIndex = 55;
-			this->checkBox3->Text = L"checkBox3";
+			this->checkBox3->Text = L"Plotting";
 			this->checkBox3->UseVisualStyleBackColor = true;
 			// 
 			// checkBox4
 			// 
 			this->checkBox4->AutoSize = true;
-			this->checkBox4->Location = System::Drawing::Point(1140, 565);
+			this->checkBox4->Location = System::Drawing::Point(1174, 567);
 			this->checkBox4->Name = L"checkBox4";
-			this->checkBox4->Size = System::Drawing::Size(80, 17);
+			this->checkBox4->Size = System::Drawing::Size(83, 17);
 			this->checkBox4->TabIndex = 56;
-			this->checkBox4->Text = L"checkBox4";
+			this->checkBox4->Text = L"Buffer Done";
 			this->checkBox4->UseVisualStyleBackColor = true;
 			// 
 			// checkBox2
 			// 
 			this->checkBox2->AutoSize = true;
-			this->checkBox2->Location = System::Drawing::Point(1140, 536);
+			this->checkBox2->Location = System::Drawing::Point(1086, 567);
 			this->checkBox2->Name = L"checkBox2";
-			this->checkBox2->Size = System::Drawing::Size(80, 17);
+			this->checkBox2->Size = System::Drawing::Size(78, 17);
 			this->checkBox2->TabIndex = 54;
-			this->checkBox2->Text = L"checkBox2";
+			this->checkBox2->Text = L"Processing";
 			this->checkBox2->UseVisualStyleBackColor = true;
 			// 
 			// label9
 			// 
 			this->label9->AutoSize = true;
-			this->label9->Location = System::Drawing::Point(955, 424);
+			this->label9->Location = System::Drawing::Point(855, 593);
 			this->label9->Name = L"label9";
 			this->label9->Size = System::Drawing::Size(58, 13);
 			this->label9->TabIndex = 58;
@@ -843,46 +879,77 @@ private: System::Windows::Forms::TextBox^  tb_refresh_rate;
 			// 
 			// tb_startTime
 			// 
-			this->tb_startTime->Location = System::Drawing::Point(1016, 421);
+			this->tb_startTime->Location = System::Drawing::Point(919, 590);
 			this->tb_startTime->Name = L"tb_startTime";
 			this->tb_startTime->ReadOnly = true;
-			this->tb_startTime->Size = System::Drawing::Size(198, 20);
+			this->tb_startTime->Size = System::Drawing::Size(338, 20);
 			this->tb_startTime->TabIndex = 57;
+			// 
+			// b_transferDataFile
+			// 
+			this->b_transferDataFile->Location = System::Drawing::Point(1083, 378);
+			this->b_transferDataFile->Name = L"b_transferDataFile";
+			this->b_transferDataFile->Size = System::Drawing::Size(152, 41);
+			this->b_transferDataFile->TabIndex = 59;
+			this->b_transferDataFile->Text = L"Transfer SD Data File";
+			this->b_transferDataFile->UseVisualStyleBackColor = true;
+			this->b_transferDataFile->Click += gcnew System::EventHandler(this, &MyForm::b_transferDataFile_Click);
+			// 
+			// b_deleteDataFile
+			// 
+			this->b_deleteDataFile->Location = System::Drawing::Point(1083, 492);
+			this->b_deleteDataFile->Name = L"b_deleteDataFile";
+			this->b_deleteDataFile->Size = System::Drawing::Size(152, 41);
+			this->b_deleteDataFile->TabIndex = 60;
+			this->b_deleteDataFile->Text = L"Delete SD Data File";
+			this->b_deleteDataFile->UseVisualStyleBackColor = true;
+			this->b_deleteDataFile->Click += gcnew System::EventHandler(this, &MyForm::b_deleteDataFile_Click);
 			// 
 			// label10
 			// 
 			this->label10->AutoSize = true;
-			this->label10->Location = System::Drawing::Point(960, 526);
+			this->label10->Location = System::Drawing::Point(1083, 422);
 			this->label10->Name = L"label10";
-			this->label10->Size = System::Drawing::Size(96, 13);
-			this->label10->TabIndex = 59;
-			this->label10->Text = L"Data Refresh Rate";
+			this->label10->Size = System::Drawing::Size(112, 13);
+			this->label10->TabIndex = 61;
+			this->label10->Text = L"Transfer File Location:";
+			// 
+			// tb_TXFileLocation
+			// 
+			this->tb_TXFileLocation->BackColor = System::Drawing::SystemColors::Control;
+			this->tb_TXFileLocation->Location = System::Drawing::Point(1061, 438);
+			this->tb_TXFileLocation->Name = L"tb_TXFileLocation";
+			this->tb_TXFileLocation->ReadOnly = true;
+			this->tb_TXFileLocation->Size = System::Drawing::Size(196, 20);
+			this->tb_TXFileLocation->TabIndex = 62;
+			// 
+			// progbar_TX
+			// 
+			this->progbar_TX->Location = System::Drawing::Point(1157, 463);
+			this->progbar_TX->Name = L"progbar_TX";
+			this->progbar_TX->Size = System::Drawing::Size(100, 23);
+			this->progbar_TX->TabIndex = 63;
 			// 
 			// label11
 			// 
 			this->label11->AutoSize = true;
-			this->label11->Location = System::Drawing::Point(1016, 545);
+			this->label11->Location = System::Drawing::Point(1061, 468);
 			this->label11->Name = L"label11";
-			this->label11->Size = System::Drawing::Size(47, 13);
-			this->label11->TabIndex = 60;
-			this->label11->Text = L"seconds";
-			// 
-			// tb_refresh_rate
-			// 
-			this->tb_refresh_rate->Location = System::Drawing::Point(963, 542);
-			this->tb_refresh_rate->Name = L"tb_refresh_rate";
-			this->tb_refresh_rate->Size = System::Drawing::Size(47, 20);
-			this->tb_refresh_rate->TabIndex = 61;
-			this->tb_refresh_rate->Text = L"60";
+			this->label11->Size = System::Drawing::Size(93, 13);
+			this->label11->TabIndex = 64;
+			this->label11->Text = L"Transfer Progress:";
 			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1223, 673);
-			this->Controls->Add(this->tb_refresh_rate);
+			this->ClientSize = System::Drawing::Size(1269, 673);
 			this->Controls->Add(this->label11);
+			this->Controls->Add(this->progbar_TX);
+			this->Controls->Add(this->tb_TXFileLocation);
 			this->Controls->Add(this->label10);
+			this->Controls->Add(this->b_deleteDataFile);
+			this->Controls->Add(this->b_transferDataFile);
 			this->Controls->Add(this->label9);
 			this->Controls->Add(this->tb_startTime);
 			this->Controls->Add(this->checkBox4);
@@ -976,11 +1043,8 @@ private: System::Void b_SetIntegrationTimes_Click(System::Object^  sender, Syste
 			this->serialPort1->Open();
 			this->b_SetIntegrationTimes->Enabled = false;
 		}
-		else {
-			this->tb_updates->Text = (this->comboBox1->Text) + " is still open.";
+		else
 			this->b_SetIntegrationTimes->Enabled = false;
-			Application::DoEvents();
-		}
 	}
 
 	this->serialPort1->WriteLine("4");	//change integrals at the main menu
@@ -1039,7 +1103,7 @@ private: System::Void b_SetThreshold_Click(System::Object^  sender, System::Even
 
 private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventArgs^  e) {
 
-	////background worker stuff!
+	//background worker stuff
 	psdCap_run = !psdCap_run;		//init'd as false
 	if (psdCap_run)
 	{
@@ -1055,19 +1119,25 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 	//String^ s_fileName;
 	dataForBkgdWorker^ s_variables = gcnew dataForBkgdWorker;	//lets you name the fileName and portName
 
-	if (this->comboBox1->Text == String::Empty) {
+	if (this->comboBox1->Text == String::Empty) 
+	{
 		this->tb_updates->Text = "Select a port above.";
+		this->b_capturePSD->Text = "Capture PSD";
+		psdCap_run = !psdCap_run;
 		return;
 	}
-	else {
-		if (!this->serialPort1->IsOpen) {
+	else 
+	{
+		if (!this->serialPort1->IsOpen) 
+		{
 			this->serialPort1->PortName = this->comboBox1->Text;
 			this->serialPort1->Open();
 		}
 		else
-			this->tb_updates->Text = (this->comboBox1->Text) + " is already open.";
+			this->tb_updates->Text = (this->comboBox1->Text) + " is open.";
 	}
 		
+	//put the serial port number into the data for background worker struct so we can pass it in
 	s_variables->portName = this->comboBox1->Text;
 	
 	if (psdCap_run && (chk_atf->Checked || chk_stf->Checked))	//if we are running and one of the check buttons is checked, get the file name to pass
@@ -1080,11 +1150,9 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 			return;
 		}
 
-		/* Get the filename */
+		// Get the filename
 		s_variables->mstrFileName = this->saveFileDialog1->FileName;
 	}
-
-	s_variables->refresh_rate = System::Int32::Parse(this->tb_refresh_rate->Text);
 
 	this->serialPort1->WriteLine("0");	//choose change mode from main menu
 	Sleep(500);
@@ -1098,12 +1166,12 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 	double dPSDYmin = 0.0;
 	double dPSDYmax = 0.0;
 	double dFOMRange = 0.0;
-	iNumberSpectrumBins = 1000;	//these variables are globals
-	iFOMBins = 100;				//
-	dSpectrumBinSize = 0.0;		//
-	dFOMBinSize = 0.0;			//
+	iNumberSpectrumBins = 1000;
+	iFOMBins = 100;				
+	dSpectrumBinSize = 0.0;		
+	dFOMBinSize = 0.0;			
 
-	/* Determine the domain and set axes for the spectrum graph */
+	// Determine the domain and set axes for the spectrum graph
 	dPSDXmin = this->ch_PSD->ChartAreas[0]->AxisX->Minimum;			//get the min and max of the PSD chart
 	dPSDXmax = this->ch_PSD->ChartAreas[0]->AxisX->Maximum;
 	this->ch_Spectrum->ChartAreas[0]->AxisX->Minimum = dPSDXmin;	//set the min and max of the spectrum chart to match
@@ -1111,7 +1179,7 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 	dSpectrumDomain = dPSDXmax - dPSDXmin;							//determine that domain of values
 	dSpectrumBinSize = dSpectrumDomain / iNumberSpectrumBins;		//set the bin size accordingly //currently 1000 bins
 
-	/* Determine the range, set axes, and calculate the bin size for the FOM graph */
+	//Determine the range, set axes, and calculate the bin size for the FOM graph
 	dPSDYmin = this->ch_PSD->ChartAreas[0]->AxisY->Minimum;
 	dPSDYmax = this->ch_PSD->ChartAreas[0]->AxisY->Maximum;
 	this->ch_FOM->ChartAreas[0]->AxisX->Minimum = dPSDYmin;
@@ -1127,7 +1195,7 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 			g_iFOMArray[i] = 0;
 	}
 
-	//if the check boxes weren't checked, send no filename; always send a port name
+	//Start the background worker and pass in s_variables which is a filename and port number
 	backgroundWorker1->RunWorkerAsync(s_variables);
 
 	return;
@@ -1385,95 +1453,193 @@ private: System::Void addFOMCutsToolStripMenuItem_Click(System::Object^  sender,
 	}
 }
 
+/*	This function handles the ethernet connection and data collection from the board.
+	This function passes an array of data to the backgroundWorker1_progressChanged function
+	 where it will be processed and displayed. 
+	
+	NOTE: This function cannot access the "this->" pointer which means it cannot modify 
+			anything on the [Design] page. To do this you must call ReportProgress() from
+			this function.
+
+	This function is started in a separate thread from the main GUI when runWorkerAsync() is called. 
+
+*/
 private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::ComponentModel::DoWorkEventArgs^  e) 
 {
-	//do work
 	BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
 
-	int refresh_rate = 60;
-	std::string str_fileName;
-	std::string str_portName;
-	std::ofstream outputFile;
-	refresh_rate = safe_cast<dataForBkgdWorker^>(e->Argument)->refresh_rate;
-	String^ portname = safe_cast<dataForBkgdWorker^>(e->Argument)->portName;
-	String^ filename = safe_cast<dataForBkgdWorker^>(e->Argument)->mstrFileName;
+	std::string str_portName;	String^ portname = safe_cast<dataForBkgdWorker^>(e->Argument)->portName;
+	std::string str_fileName;	String^ filename = safe_cast<dataForBkgdWorker^>(e->Argument)->mstrFileName;
 	str_fileName = msclr::interop::marshal_as<std::string>(filename);
+	std::ofstream outputFile;
 	outputFile.open(str_fileName, std::ios::app);
-	
-	if (!outputFile)	//if we can't open the file
-	{
-		//send a message to report progress
-		worker->ReportProgress(-1);
-	}
+	if (!outputFile)
+		worker->ReportProgress(-1);	//tell the user we couldn't open the file
 
-	//start serial connection and try and send/receive bytes
+	//if the serial port isn't open, start serial connection
 	if (!serialPort1->IsOpen) {
 		serialPort1->PortName = portname;
 		serialPort1->Open();
 	}
-	else
-		worker->ReportProgress(-11);	//tell the user that the port is open
 
-	//Write to the port
-	if (serialPort1->IsOpen)	//if we are using the box & bitsream w/old SDK code, need to put 0->4, 1, before sending a 2
+	worker->ReportProgress(-11);	//tell the user that the port is open
+
+	//Start DAQ
+	if (serialPort1->IsOpen)
 	{
 		serialPort1->WriteLine("2");
 		Sleep(500);
-		worker->ReportProgress(-12);	//tell the user we have connected
+		worker->ReportProgress(-12);	//tell the user we started DAQ
 	}
 
-	/* Capture incoming data; process and plot it */
+	//local variables
 	int index{ 0 };
-	int buffsize{ 0 };
-	int numBuffers{ 0 };
-	int bytesRead{ 0 };
-	int offset{ 0 };
-	int dataBuffer[100]{};
-	String^ amessage = "";
-	g_dataBuffer = gcnew array<unsigned int>(DATABUFFER_SIZE) {};
+	g_dataBuffer = gcnew array<unsigned int>(DATABUFFER_SIZE) {};	//this buffer gets passed to the Progress changed function for processing //holds all 3 arrays (AA, LPF, DFF)
+	//ethernet variables
+	WSADATA wsaData;
+	SOCKET ConnectSocket = INVALID_SOCKET;
+	struct addrinfo *result = NULL,
+		*ptr = NULL,
+		hints;
+	char buffer[20] = "1";
+	char *sendbuf = buffer;
 
-	while (worker->CancellationPending == false)
+	unsigned char recvbuf[DATA_BUFLEN]{};
+	int recvbuflen = DATA_BUFLEN;	//length in bytes
+	int iResult;
+	int iIter = 0;
+	int event_counter = 0;
+	unsigned int reassemble_val = 0;
+	int m_bytes_received = 0;
+	int m_packets_recvd = -1;
+
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;			//can technically choose AF_UNSPEC or AF_INET, stick with AF_INET
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	std::string m_ip_addr = "192.168.250.2";	//define the ip address for the server that we wish to connect to
+
+	//until the button to stop is pressed, we'll try and collect data
+	while (worker->CancellationPending == false)//loop 1
 	{
-		Sleep(refresh_rate);	//ask for data every few seconds, depending on how fast reading back is 
-		if (serialPort1->IsOpen)
-		{
-			serialPort1->WriteLine("a\r");
-			Sleep(500);
-			worker->ReportProgress(-13);
-		}
-		else
-		{
-			serialPort1->PortName = portname;
-			serialPort1->Open();
-			serialPort1->WriteLine("a\r");
-			Sleep(500);
-			worker->ReportProgress(-13);
-		}
-		
-		while (index < DATABUFFER_SIZE)	//read the entire thing into our u8 buffer so we may sort it back into integers and save it
-		{
-			UInt32::TryParse(this->serialPort1->ReadLine(), g_dataBuffer[index]);	//parse in the line that we are reading 
-			outputFile << g_dataBuffer[index] << std::endl;		//save it to a file in a column
-			index++;
+		// INITIALIZE Winsock
+		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if (iResult != 0) {
+			worker->ReportProgress(-13, iResult);	//tell the user we couldn't initialize winsock
+			return;
 		}
 
-		worker->ReportProgress(414141, g_dataBuffer);
-		index = 0;
-	}
+		// Resolve the server ADDRESS and port information
+		iResult = getaddrinfo(m_ip_addr.c_str(), DEFAULT_PORT, &hints, &result);
+		if (iResult != 0) {
+			worker->ReportProgress(-14, iResult);	//tell the user we had trouble getting the adress info
+			WSACleanup();
+			return;
+		}
 
+		// Creating the SOCKET we'll use to connect to the server
+		ConnectSocket = socket(result->ai_family, SOCK_STREAM, IPPROTO_TCP);
+		if (ConnectSocket == INVALID_SOCKET) {
+			worker->ReportProgress(-15, iResult);	//tell the user we couldn't create the socket
+			WSACleanup();
+			return;
+		}
+
+		//pass the created socket to the connect function and attempt to CONNECT
+		iResult = connect(ConnectSocket, result->ai_addr, (int)result->ai_addrlen);
+		if (iResult == SOCKET_ERROR)
+		{
+			worker->ReportProgress(-16, iResult);	//tell the user we couldn't connect to the server
+			closesocket(ConnectSocket);
+			ConnectSocket = INVALID_SOCKET;
+			WSACleanup();
+			return;
+		}
+
+		//set a timeout for the socket that we are using, this will make it jump out of receive if we haven't gotten anything in 10 ms
+		DWORD sockTO = 10;
+		//SO_RCVTIMEO specifies the timout, in milliseconds, for how long recv will block for
+		setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
+
+		worker->ReportProgress(-17);	//tell the user we have connected to the board with our socket
+
+		while (worker->CancellationPending == false)//loop 2
+		{
+			iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+			if (iResult == SOCKET_ERROR) {
+				worker->ReportProgress(-18, WSAGetLastError());	//tell the user we failed a send
+				closesocket(ConnectSocket);
+				WSACleanup();
+				break;
+			}
+
+			//each packet from the board is 32*32=1024 bytes long and has 32*8 integers -> 32 events in it
+			//there will be 48 packets total per full buffer (full buffer = AA + LPF + DFF)
+			iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
+			if (iResult > 0)
+			{
+				//take in the packet and reassemble the ints from each buffer
+				iIter = 0;
+				event_counter = 0;
+				//loop over the packet we received and reassemble the ints in each event
+				while (event_counter < 32 * 8)
+				{
+					g_dataBuffer[index] = (recvbuf[iIter + 3] << 24) | (recvbuf[iIter + 2] << 16) | (recvbuf[iIter + 1] << 8) | recvbuf[iIter];
+					outputFile << g_dataBuffer[index] << std::endl;
+
+					iIter += 4;
+					event_counter++;
+					index++;
+				}
+
+				//we have received a full buffer, send it to ProgressChanged to be processed and displayed
+				//We can place a switch here that will send only every Nth full buffer to ProgressChanged
+				// This is in case processing the buffers causes too much of a hit to the system and we can't keep up at high event rates
+				// ---i'm implementing the switch to send only one out of every ten buffers to the display
+				// using the variable m_packets_recvd to keep track
+				//Currently we send every buffer to be processed and displayed
+				m_bytes_received += iResult;	iResult = 0;
+				if (m_bytes_received >= 49152)
+				{
+					m_packets_recvd++;
+					if (m_packets_recvd == 0 || m_packets_recvd == 10)
+					{
+						//pass the data to the report buffer for processing and display
+						worker->ReportProgress(414141, g_dataBuffer);
+						m_packets_recvd = 0;
+					}
+					m_bytes_received = 0;
+					index = 0;
+				}
+			}
+			else
+			{
+				if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
+					worker->ReportProgress(-19, WSAGetLastError());
+			}
+		}//end of loop 2
+
+		// cleanup
+		closesocket(ConnectSocket);
+		WSACleanup();
+
+		//unless the background worker has been cancelled, from here we will loop back and restart the connection
+	}//end of loop 1
+
+	//send the message to stop DAQ on the board
 	this->serialPort1->WriteLine("q\r");
 	Sleep(1000);
 
 	outputFile.close();
 	serialPort1->Close();
-	worker->ReportProgress(-19);
+	worker->ReportProgress(-30);	//tell the user we have stopped DAQ
 }
 private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender, System::ComponentModel::ProgressChangedEventArgs^  e) 
 {
 	//update the main thread
 	if (e->ProgressPercentage == -1)
 	{
-		this->tb_updates->Text = "Error.";
+		this->tb_updates->Text = "Error opening local data file.";
 		return;
 	}
 	else if (e->ProgressPercentage == -11)
@@ -1488,16 +1654,63 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	}
 	else if (e->ProgressPercentage == -13)
 	{
-		this->tb_updates->Text = "Requesting Data.";
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "Error initializing Winsock with code " + retVal;
+		return;
+	}
+	else if (e->ProgressPercentage == -14)
+	{
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "getaddrinfo failed with error " + retVal;
+		return;
+	}
+	else if (e->ProgressPercentage == -15)
+	{
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "Socket creation failed with error " + retVal;
+		return;
+	}
+	else if (e->ProgressPercentage == -16)
+	{
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "Connect failed with error " + retVal;
+		return;
+	}
+	else if (e->ProgressPercentage == -17)
+	{
+		this->tb_updates->Text = "Socket connected at port: " + DEFAULT_PORT;
+		return;
+	}
+	else if (e->ProgressPercentage == -18)
+	{
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "Failed to send with " + retVal + ". Restarting connection.";
 		return;
 	}
 	else if (e->ProgressPercentage == -19)
 	{
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "Recv failed with " + retVal + ". Restarting connection.";
+		return;
+	}
+	else if (e->ProgressPercentage == -20)
+	{
+		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		this->tb_updates->Text = "Received full buffer, updating display.";
+		return;
+	}
+	else if (e->ProgressPercentage == -30)
+	{
 		this->tb_updates->Text = "Data acquisition stopped.";
 		return;
 	}
-	else if (e->ProgressPercentage == 414141)	//the only elseif where we stay in this function to parse out data and print to the charts
-		this->tb_updates->Text = "Buffer received and saved.";
+	else if (e->ProgressPercentage == 414141)	//the only else if where we stay in this function to parse out data and print to the charts
+		this->tb_updates->Text = "Buffer received for processing.";
+	else
+	{
+		this->tb_updates->Text = "Reporting progress for " + e->ProgressPercentage;
+		return;
+	}
 	
 	this->checkBox1->Checked = false;
 	this->checkBox2->Checked = false;
@@ -1508,24 +1721,27 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	int index(0);
 	int eventIndex(0);
 
-	array<unsigned int>^ dataBufferPassed = safe_cast<array<unsigned int>^>(e->UserState);	//this will be an array[12288]
+	array<unsigned int>^ dataBufferPassed = safe_cast<array<unsigned int>^>(e->UserState);	//this will be an unsigned int array[12288]
 	array<EventData>^ eventsSorted = gcnew array<EventData>(512);
 
 	//consume the first 111111 from databufferpassed
 	while (1)
 	{
-		if (dataBufferPassed[index] == 111111)	//is the value in the array = 111111?
+		if (dataBufferPassed[index] == 111111)
 		{
-			index++;							//if yes, increment by 1 (the next value is the real ID) and break; 
+			index++;	//increment by 1 (the next value is the real ID) and break
 			break;								
 		}
-		index++;								//if no, keep searching
-		if (index > 12288)
+		else
+			index++;	//if no, keep searching
+
+		if (index > DATABUFFER_SIZE)
 		{
 			this->tb_updates->Text = "No data found. Please check settings.";
-			break;
+			return;	//don't want to waste time trying to save this...
 		}
 	}
+
 
 	while (index < DATABUFFER_SIZE)	//for sorting data //comment while verifying that we get data
 	{
@@ -1590,7 +1806,7 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 		this->tb_startTime->Text = "T = " + tstart + ", event: " + tevent;
 	}
 
-	this->tb_updates->Text = "Data sorted.";
+	//this->tb_updates->Text = "Data sorted.";
 	this->checkBox1->Checked = true;
 	//Now that data is sorted, sift through and plot it
 	array<double>^ aablavgArray = gcnew array<double>(512);
@@ -1627,7 +1843,7 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	int i_long_samples = 0; double d_long_samples_convert = 0.0;
 	int i_full_samples = 0; double d_full_samples_convert = 0.0;
 
-	this->tb_updates->Text = "Processing.";
+	//this->tb_updates->Text = "Processing.";
 	this->checkBox2->Checked = true;
 
 	eventIndex = 0;	//reset this value
@@ -1725,7 +1941,7 @@ private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^  send
 {
 	//what to do on cancel or completion
 	if (e->Cancelled)
-		this->tb_updates->Text = "Worker cancel success.";
+		this->tb_updates->Text = "DAQ worker thread cancel success.";
 	else if (e->Error != nullptr)
 		MessageBox::Show(e->Error->Message);
 }
@@ -1750,6 +1966,282 @@ private: System::Void backgroundWorker2_ProgressChanged(System::Object^  sender,
 private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e) 
 {
 	
+}
+		 //Transfer the SD card file
+		 //Start the ethernet connection
+		 //Open a serial port and call the function
+		 //Begin pinging the board to get the packets, they're the same size packets as data packets from DAQ
+private: System::Void b_transferDataFile_Click(System::Object^  sender, System::EventArgs^  e) {
+	this->b_transferDataFile->Text = "Transferring...";
+	this->progbar_TX->Value = 0;
+	//use the same procedure as we use in DAQ to connect and accept packets
+	const System::Windows::Forms::DialogResult idYES = (System::Windows::Forms::DialogResult)IDYES;
+	const System::Windows::Forms::DialogResult idNO = (System::Windows::Forms::DialogResult)IDNO;
+	const System::Windows::Forms::DialogResult idCANCEL = (System::Windows::Forms::DialogResult)IDCANCEL;
+	//Messagebox("Main window message first", );
+	switch (MessageBox::Show("Choose a new transfer save file location?\n\nNo will append the current file shown in the Transfer File Location box.\nCancel will abort the transfer.", "Transfer File Save Location", MessageBoxButtons::YesNoCancel))
+	{
+	case idYES:
+		this->tb_updates->Text = "Choose a new transfer file save location.";
+		saveFileDialog_TXFile->ShowDialog();
+		tb_TXFileLocation->Text = saveFileDialog_TXFile->FileName;
+		if (this->tb_TXFileLocation->Text == String::Empty)
+		{
+			this->tb_updates->Text = "No transfer file location is selected, please choose a new file location.";
+			this->b_transferDataFile->Text = "Transfer SD Data File";
+			return;
+		}
+		else
+			this->tb_updates->Text = "Selected a new transfer file save location.";
+		break;
+	case idNO:
+		this->tb_updates->Text = "Using the currently selected file save location.";
+		if (this->tb_TXFileLocation->Text == String::Empty)
+		{
+			this->tb_updates->Text = "No transfer file location is selected, please choose a new file location.";
+			this->b_transferDataFile->Text = "Transfer SD Data File";
+			return;
+		}
+		break;
+	case idCANCEL:	//both pressing the cancel button and closing the window with the 'X' come here
+		this->tb_updates->Text = "Aborted the transfer.";
+		this->b_transferDataFile->Text = "Transfer SD Data File";
+		return;
+		break;
+	}
+	Application::DoEvents();
+
+	//now we know there is a file we can save to, open the file to transfer into it
+	std::ofstream tx_file;
+	std::string tx_filename = msclr::interop::marshal_as<std::string>(tb_TXFileLocation->Text);
+	tx_file.open(tx_filename, std::ios::app);
+
+	//start the ethernet connection
+	this->tb_updates->Text = "Connecting to the board...";
+
+	//ethernet variables
+	WSADATA wsaData;
+	SOCKET ConnectSocket = INVALID_SOCKET;
+	struct addrinfo *result = NULL,
+		*ptr = NULL,
+		hints;
+	char buffer[20] = "1";
+	char *sendbuf = buffer;
+
+	unsigned char recvbuf[DATA_BUFLEN]{};
+	int recvbuflen = DATA_BUFLEN;	//length in bytes
+	int iResult;
+	int iIter = 0;
+	int event_counter = 0;
+	INT64 m_bytes_received = 0;
+	System::String^ m_str_TX_file_size;
+	INT64 m_TX_file_size = 0;
+	INT64 m_TX_steps = 1;
+	INT64 m_TX_step_size = 0;
+
+	bool m_running = TRUE;
+
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;			//can technically choose AF_UNSPEC or AF_INET, stick with AF_INET
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	std::string m_ip_addr = "192.168.250.2";	//define the ip address for the server that we wish to connect to
+
+//check/open the serial connection to call the TX function
+	if (this->comboBox1->Text == String::Empty) {
+		this->tb_updates->Text = "Select a port above.";
+		this->b_transferDataFile->Text = "Transfer SD Data File";
+		tx_file.close();
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen)
+		{
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+		}
+	}
+
+	//make sure we don't get garbage
+	if (this->serialPort1->BytesToRead > 0)
+		this->serialPort1->ReadExisting();
+	//call the TX function on the board
+	serialPort1->WriteLine("10");
+	Sleep(500);
+	m_str_TX_file_size = serialPort1->ReadLine();	//gets the file size, tells us how many bytes we should expect to read
+	m_TX_file_size = System::Convert::ToInt64(m_str_TX_file_size);
+	if (m_TX_file_size == -20)
+	{
+		this->tb_updates->Text = "Error opening the file on the board.";
+		this->b_transferDataFile->Text = "Transfer SD Data File";
+		tx_file.close();
+		return;
+	}
+	m_TX_step_size = m_TX_file_size / 10;
+
+	//begin the ethernet loop
+	while (m_running)
+	{
+		// INITIALIZE Winsock
+		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if (iResult != 0) {
+			this->tb_updates->Text = "Error initializing Winsock with code " + iResult;
+			this->b_transferDataFile->Text = "Transfer SD Data File";
+			tx_file.close();
+			return;
+		}
+
+		// Resolve the server ADDRESS and port information
+		iResult = getaddrinfo(m_ip_addr.c_str(), DEFAULT_PORT, &hints, &result);
+		if (iResult != 0) {
+			this->tb_updates->Text = "getaddrinfo failed with error " + iResult;
+			this->b_transferDataFile->Text = "Transfer SD Data File";
+			WSACleanup();
+			tx_file.close();
+			return;
+		}
+
+		// Creating the SOCKET we'll use to connect to the server
+		ConnectSocket = socket(result->ai_family, SOCK_STREAM, IPPROTO_TCP);
+		if (ConnectSocket == INVALID_SOCKET) {
+			this->tb_updates->Text = "Socket creation failed with error " + iResult;
+			this->b_transferDataFile->Text = "Transfer SD Data File";
+			WSACleanup();
+			tx_file.close();
+			return;
+		}
+
+		//pass the created socket to the connect function and attempt to CONNECT
+		iResult = connect(ConnectSocket, result->ai_addr, (int)result->ai_addrlen);
+		if (iResult == SOCKET_ERROR)
+		{
+			this->tb_updates->Text = "Connect failed with error " + iResult;
+			this->b_transferDataFile->Text = "Transfer SD Data File";
+			closesocket(ConnectSocket);
+			ConnectSocket = INVALID_SOCKET;
+			WSACleanup();
+			tx_file.close();
+			return;
+		}
+
+		//set a timeout for the socket that we are using, this will make it jump out of receive if we haven't gotten anything in 10 ms
+		DWORD sockTO = 10;
+		//SO_RCVTIMEO specifies the timout, in milliseconds, for how long recv will block for
+		setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
+
+		this->tb_updates->Text = "Connected. Transferring the file.";
+		//begin packet send/receive loop
+		while (m_running)
+		{
+			iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+			if (iResult == SOCKET_ERROR) {
+				this->tb_updates->Text = "Failed to send with " + WSAGetLastError() + ". Restarting connection.";
+				closesocket(ConnectSocket);
+				WSACleanup();
+				break;
+			}
+
+			//each packet from the board is 32*32=1024 bytes long and has 32*8 integers -> 32 events in it
+			//there will be 48 packets total per full buffer (full buffer = AA + LPF + DFF)
+			iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
+			if (iResult > 0)
+			{
+				//take in the packet and reassemble the ints from each buffer
+				iIter = 0;
+				event_counter = 0;
+				//loop over the packet we received and reassemble the ints in each event
+				while (event_counter < 32 * 8)
+				{
+					tx_file << ((recvbuf[iIter + 3] << 24) | (recvbuf[iIter + 2] << 16) | (recvbuf[iIter + 1] << 8) | recvbuf[iIter]) << std::endl;
+
+					iIter += 4;
+					event_counter++;
+				}
+
+				//let the user know how the transfer is going
+				//updates a bar every 10% and breaks out when we're done transferring
+				m_bytes_received += iResult;	iResult = 0;
+				if (m_bytes_received >= m_TX_step_size * m_TX_steps)
+				{
+					m_TX_steps++;
+					this->progbar_TX->PerformStep();	//performs a step //steps are 10% or 10/100
+				}
+				if (m_bytes_received >= m_TX_file_size)
+				{
+					//we can stop because we have received the entire file
+					this->tb_updates->Text = "Finished receiving packets. " + m_bytes_received + " bytes received.";
+					break;
+				}
+
+			}
+			else
+			{
+				if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
+				{
+					this->tb_updates->Text = "Receive failed with error " + WSAGetLastError();
+					this->b_transferDataFile->Text = "Transfer SD Data File";
+					tx_file.close();
+					return;
+				}
+			}
+		}//end of send/recv loop
+
+		// cleanup
+		closesocket(ConnectSocket);
+		WSACleanup();
+		if (m_bytes_received >= m_TX_file_size)
+			break;
+		//unless we have read enough bytes, we will loop back and restart the connection to try and receive the rest
+	}//end of Ethernet loop
+	
+	this->b_transferDataFile->Text = "Transfer SD Data File";
+	tx_file.close();
+	return; 
+}
+
+//This function deletes the SD card file on the board
+private: System::Void b_deleteDataFile_Click(System::Object^  sender, System::EventArgs^  e) {
+
+	this->tb_updates->Text = "Deleteing the file...";
+	//check/open the serial connection to call the TX function
+	if (this->comboBox1->Text == String::Empty) {
+		this->tb_updates->Text = "Select a port above.";
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen)
+		{
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+		}
+	}
+
+	System::String^ m_str_delete_ret;
+	INT64 m_delete_ret = 0;
+
+	//make sure we don't get garbage
+	if (this->serialPort1->BytesToRead > 0)
+		this->serialPort1->ReadExisting();
+	//call the TX function on the board
+	serialPort1->WriteLine("11");
+	Sleep(500);
+	if (this->serialPort1->BytesToRead > 0)
+	{
+		m_str_delete_ret = serialPort1->ReadLine();	//gets the file size, tells us how many bytes we should expect to read
+		m_delete_ret = System::Convert::ToInt64(m_str_delete_ret);
+	}
+
+	if (m_delete_ret == -21)
+	{
+		this->tb_updates->Text = "Error deleting the file.";
+		return;
+	}
+	else
+		this->tb_updates->Text = "Successfully deleted the SD card file.";
+
+	return;
 }
 };
 }

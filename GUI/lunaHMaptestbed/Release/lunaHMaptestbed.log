@@ -1,2 +1,7 @@
-﻿  MyForm.cpp
-  lunaHMaptestbed.vcxproj -> C:\Users\GStoddard\Desktop\singr_update\GUI\Release\lunaHMaptestbed.exe
+﻿  captureWaveformsPopup.cpp
+  changeAxesPopUp.cpp
+  MyForm.cpp
+  setEnergyCutsPopUp.cpp
+  Generating Code...
+  .NETFramework,Version=v4.5.2.AssemblyAttributes.cpp
+  lunaHMaptestbed.vcxproj -> C:\Users\gstoddard\Desktop\Ethernet_Testing\GUI\Release\lunaHMaptestbed.exe

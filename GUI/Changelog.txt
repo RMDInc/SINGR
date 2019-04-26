@@ -1,2 +1,4 @@
 Version 2.13
 3-2-2018 - This version is the fully built version of the previous one. Version 2.12 had errors with going out-of-bounds in an internal array due to never finding the event identifier in received data. This caused the system to crash. The reason for this was improper error handling, but has been fixed. Further, the system now properly sets the mode before requesting data and handles the previously mentioned error better. The release versions (x64, x86) are built and may be used.
+
+Version 3.0 - Updated to have both an ethernet connection and a serial connection, ethernet for receiving data during DAQ and serial for commanding the board. Eventually, this will be consolidated down to just an ethernet connection, but for now, this is fine. Added a button for transferring the file on the SD card after a run and a button to delete the file, as well. The GUI will display one out of every 10 buffers, this can be changed by going into the source code. 
