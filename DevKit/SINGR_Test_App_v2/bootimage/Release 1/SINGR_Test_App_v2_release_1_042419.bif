@@ -1,0 +1,7 @@
+//arch = zynq; split = false; format = MCS
+the_ROM_image:
+{
+	[bootloader]C:\Users\gstoddard\Desktop\Ethernet_Testing\SINGR_Test_App_v2_desktop\test_app_v2_fsbl\Release\test_app_v2_fsbl.elf
+	C:\Users\gstoddard\Desktop\Ethernet_Testing\SINGR_Test_App_v2_desktop\design_1_wrapper_hw_platform_0\design_1_wrapper.bit
+	C:\Users\gstoddard\Desktop\Ethernet_Testing\SINGR_Test_App_v2_desktop\SINGR_Test_App_v2\Release\SINGR_Test_App_v2.elf
+}

@@ -32,8 +32,15 @@
 #define DATABUFFER_SIZE			12288
 #define DATA_BUFLEN				49152
 #define DEFAULT_PORT			"7"
+#define INPUT_BUFFER_SIZE	512	//coming from the FPGA
+#define OUTPUT_BUFFER_SIZE	36	//going to the GUI
+#define EVENTS_PER_BUFFER	8
+#define EVENT_SIZE			32
+#define INTS_PER_EVENT		8
+#define INTEG_START_TIME	200
+#define NS_TO_SAMPLES		4
 
-value struct EventData
+value struct dataProductEvent
 {
 	int aaTotalEvents;	// AA stands for adjacent average
 	int aaEventNumber;	// should be matched across all integrators
@@ -142,6 +149,7 @@ namespace lunaHMaptestbed {
 	private: ref struct dataForBkgdWorker {
 		String^ mstrFileName;
 		String^ portName;
+		String^ bufferDisplayFrequency;
 	};
 	private: static array<Int32>^ g_iESpectrumArray = gcnew array<Int32>(1000) {};
 	private: static array<Int32>^ g_iFOMArray = gcnew array<Int32>(100) {};
@@ -225,9 +233,23 @@ private: System::Windows::Forms::Button^  b_deleteDataFile;
 private: System::Windows::Forms::SaveFileDialog^  saveFileDialog_TXFile;
 private: System::Windows::Forms::Label^  label10;
 private: System::Windows::Forms::TextBox^  tb_TXFileLocation;
-private: System::Windows::Forms::ProgressBar^  progbar_TX;
+
 
 private: System::Windows::Forms::Label^  label11;
+
+private: System::Windows::Forms::ToolStripMenuItem^  recoverMMToolStripMenuItem;
+private: System::Windows::Forms::Button^  b_etherConnect;
+private: System::Windows::Forms::TextBox^  tb_buff_disp_freq;
+
+private: System::Windows::Forms::Label^  label12;
+private: System::Windows::Forms::TextBox^  tb_TX_progress;
+private: System::Windows::Forms::ToolStripMenuItem^  closeEthernetConnectionToolStripMenuItem;
+private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
+
+
+
+
+
 
 
 
@@ -280,6 +302,8 @@ private: System::Windows::Forms::Label^  label11;
 			this->exitToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->diagnosticsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->captureWaveformsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->recoverMMToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->closeEthernetConnectionToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->cOMPortToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->closeCOMToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->restartCOMToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -334,8 +358,12 @@ private: System::Windows::Forms::Label^  label11;
 			this->saveFileDialog_TXFile = (gcnew System::Windows::Forms::SaveFileDialog());
 			this->label10 = (gcnew System::Windows::Forms::Label());
 			this->tb_TXFileLocation = (gcnew System::Windows::Forms::TextBox());
-			this->progbar_TX = (gcnew System::Windows::Forms::ProgressBar());
 			this->label11 = (gcnew System::Windows::Forms::Label());
+			this->b_etherConnect = (gcnew System::Windows::Forms::Button());
+			this->tb_buff_disp_freq = (gcnew System::Windows::Forms::TextBox());
+			this->label12 = (gcnew System::Windows::Forms::Label());
+			this->tb_TX_progress = (gcnew System::Windows::Forms::TextBox());
+			this->endDAQToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_Spectrum))->BeginInit();
@@ -345,6 +373,7 @@ private: System::Windows::Forms::Label^  label11;
 			// serialPort1
 			// 
 			this->serialPort1->BaudRate = 921600;
+			this->serialPort1->ReadTimeout = 3;
 			// 
 			// comboBox1
 			// 
@@ -353,7 +382,7 @@ private: System::Windows::Forms::Label^  label11;
 			this->comboBox1->Location = System::Drawing::Point(784, 377);
 			this->comboBox1->Name = L"comboBox1";
 			this->comboBox1->Size = System::Drawing::Size(97, 21);
-			this->comboBox1->TabIndex = 9;
+			this->comboBox1->TabIndex = 1;
 			// 
 			// label6
 			// 
@@ -375,7 +404,7 @@ private: System::Windows::Forms::Label^  label11;
 			this->menuStrip1->Location = System::Drawing::Point(0, 0);
 			this->menuStrip1->Name = L"menuStrip1";
 			this->menuStrip1->Size = System::Drawing::Size(1269, 24);
-			this->menuStrip1->TabIndex = 28;
+			this->menuStrip1->TabIndex = 0;
 			this->menuStrip1->Text = L"menuStrip1";
 			// 
 			// fileToolStripMenuItem
@@ -404,7 +433,10 @@ private: System::Windows::Forms::Label^  label11;
 			// 
 			// diagnosticsToolStripMenuItem
 			// 
-			this->diagnosticsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(1) { this->captureWaveformsToolStripMenuItem });
+			this->diagnosticsToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {
+				this->captureWaveformsToolStripMenuItem,
+					this->recoverMMToolStripMenuItem, this->closeEthernetConnectionToolStripMenuItem, this->endDAQToolStripMenuItem
+			});
 			this->diagnosticsToolStripMenuItem->Name = L"diagnosticsToolStripMenuItem";
 			this->diagnosticsToolStripMenuItem->Size = System::Drawing::Size(80, 20);
 			this->diagnosticsToolStripMenuItem->Text = L"&Diagnostics";
@@ -412,9 +444,23 @@ private: System::Windows::Forms::Label^  label11;
 			// captureWaveformsToolStripMenuItem
 			// 
 			this->captureWaveformsToolStripMenuItem->Name = L"captureWaveformsToolStripMenuItem";
-			this->captureWaveformsToolStripMenuItem->Size = System::Drawing::Size(179, 22);
+			this->captureWaveformsToolStripMenuItem->Size = System::Drawing::Size(215, 22);
 			this->captureWaveformsToolStripMenuItem->Text = L"&Capture Waveforms";
 			this->captureWaveformsToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::captureWaveformsToolStripMenuItem_Click);
+			// 
+			// recoverMMToolStripMenuItem
+			// 
+			this->recoverMMToolStripMenuItem->Name = L"recoverMMToolStripMenuItem";
+			this->recoverMMToolStripMenuItem->Size = System::Drawing::Size(215, 22);
+			this->recoverMMToolStripMenuItem->Text = L"Recover MM";
+			this->recoverMMToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::recoverMMToolStripMenuItem_Click);
+			// 
+			// closeEthernetConnectionToolStripMenuItem
+			// 
+			this->closeEthernetConnectionToolStripMenuItem->Name = L"closeEthernetConnectionToolStripMenuItem";
+			this->closeEthernetConnectionToolStripMenuItem->Size = System::Drawing::Size(215, 22);
+			this->closeEthernetConnectionToolStripMenuItem->Text = L"Close Ethernet Connection";
+			this->closeEthernetConnectionToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::closeEthernetConnectionToolStripMenuItem_Click);
 			// 
 			// cOMPortToolStripMenuItem
 			// 
@@ -589,7 +635,7 @@ private: System::Windows::Forms::Label^  label11;
 			chartArea2->AxisX->IsStartedFromZero = false;
 			chartArea2->AxisX->Maximum = 600000;
 			chartArea2->AxisX->Minimum = 0;
-			chartArea2->AxisY->Maximum = 500;
+			chartArea2->AxisY->Maximum = 200;
 			chartArea2->AxisY->Minimum = 0;
 			chartArea2->Name = L"ChartArea1";
 			this->ch_Spectrum->ChartAreas->Add(chartArea2);
@@ -611,7 +657,7 @@ private: System::Windows::Forms::Label^  label11;
 			chartArea3->AxisX->Maximum = 2;
 			chartArea3->AxisX->Minimum = 0;
 			chartArea3->AxisY->IsStartedFromZero = false;
-			chartArea3->AxisY->Maximum = 500;
+			chartArea3->AxisY->Maximum = 1000;
 			chartArea3->AxisY->Minimum = 0;
 			chartArea3->Name = L"ChartArea1";
 			this->ch_FOM->ChartAreas->Add(chartArea3);
@@ -631,7 +677,7 @@ private: System::Windows::Forms::Label^  label11;
 			this->b_SetIntegrationTimes->Location = System::Drawing::Point(903, 471);
 			this->b_SetIntegrationTimes->Name = L"b_SetIntegrationTimes";
 			this->b_SetIntegrationTimes->Size = System::Drawing::Size(152, 41);
-			this->b_SetIntegrationTimes->TabIndex = 32;
+			this->b_SetIntegrationTimes->TabIndex = 8;
 			this->b_SetIntegrationTimes->Text = L"Set Integration Times";
 			this->b_SetIntegrationTimes->UseVisualStyleBackColor = true;
 			this->b_SetIntegrationTimes->Click += gcnew System::EventHandler(this, &MyForm::b_SetIntegrationTimes_Click);
@@ -641,28 +687,32 @@ private: System::Windows::Forms::Label^  label11;
 			this->tb_baseline->Location = System::Drawing::Point(961, 378);
 			this->tb_baseline->Name = L"tb_baseline";
 			this->tb_baseline->Size = System::Drawing::Size(94, 20);
-			this->tb_baseline->TabIndex = 33;
+			this->tb_baseline->TabIndex = 4;
+			this->tb_baseline->Text = L"-52";
 			// 
 			// tb_short
 			// 
 			this->tb_short->Location = System::Drawing::Point(961, 401);
 			this->tb_short->Name = L"tb_short";
 			this->tb_short->Size = System::Drawing::Size(94, 20);
-			this->tb_short->TabIndex = 34;
+			this->tb_short->TabIndex = 5;
+			this->tb_short->Text = L"88";
 			// 
 			// tb_long
 			// 
 			this->tb_long->Location = System::Drawing::Point(962, 422);
 			this->tb_long->Name = L"tb_long";
 			this->tb_long->Size = System::Drawing::Size(93, 20);
-			this->tb_long->TabIndex = 35;
+			this->tb_long->TabIndex = 6;
+			this->tb_long->Text = L"472";
 			// 
 			// tb_full
 			// 
 			this->tb_full->Location = System::Drawing::Point(961, 445);
 			this->tb_full->Name = L"tb_full";
 			this->tb_full->Size = System::Drawing::Size(94, 20);
-			this->tb_full->TabIndex = 36;
+			this->tb_full->TabIndex = 7;
+			this->tb_full->Text = L"6000";
 			// 
 			// label1
 			// 
@@ -702,7 +752,7 @@ private: System::Windows::Forms::Label^  label11;
 			// 
 			// label5
 			// 
-			this->label5->Location = System::Drawing::Point(725, 401);
+			this->label5->Location = System::Drawing::Point(726, 437);
 			this->label5->Name = L"label5";
 			this->label5->Size = System::Drawing::Size(63, 31);
 			this->label5->TabIndex = 41;
@@ -711,17 +761,18 @@ private: System::Windows::Forms::Label^  label11;
 			// 
 			// tb_trigger
 			// 
-			this->tb_trigger->Location = System::Drawing::Point(787, 407);
+			this->tb_trigger->Location = System::Drawing::Point(788, 443);
 			this->tb_trigger->Name = L"tb_trigger";
 			this->tb_trigger->Size = System::Drawing::Size(94, 20);
-			this->tb_trigger->TabIndex = 42;
+			this->tb_trigger->TabIndex = 2;
+			this->tb_trigger->Text = L"8700";
 			// 
 			// b_SetThreshold
 			// 
-			this->b_SetThreshold->Location = System::Drawing::Point(728, 435);
+			this->b_SetThreshold->Location = System::Drawing::Point(729, 471);
 			this->b_SetThreshold->Name = L"b_SetThreshold";
 			this->b_SetThreshold->Size = System::Drawing::Size(153, 41);
-			this->b_SetThreshold->TabIndex = 43;
+			this->b_SetThreshold->TabIndex = 3;
 			this->b_SetThreshold->Text = L"Set Trigger Threshold";
 			this->b_SetThreshold->UseVisualStyleBackColor = true;
 			this->b_SetThreshold->Click += gcnew System::EventHandler(this, &MyForm::b_SetThreshold_Click);
@@ -745,10 +796,11 @@ private: System::Windows::Forms::Label^  label11;
 			// 
 			// b_capturePSD
 			// 
+			this->b_capturePSD->Enabled = false;
 			this->b_capturePSD->Location = System::Drawing::Point(904, 543);
 			this->b_capturePSD->Name = L"b_capturePSD";
 			this->b_capturePSD->Size = System::Drawing::Size(151, 41);
-			this->b_capturePSD->TabIndex = 46;
+			this->b_capturePSD->TabIndex = 10;
 			this->b_capturePSD->Text = L"Capture PSD";
 			this->b_capturePSD->UseVisualStyleBackColor = true;
 			this->b_capturePSD->Click += gcnew System::EventHandler(this, &MyForm::b_capturePSD_Click);
@@ -758,7 +810,7 @@ private: System::Windows::Forms::Label^  label11;
 			this->b_saveFile->Location = System::Drawing::Point(733, 574);
 			this->b_saveFile->Name = L"b_saveFile";
 			this->b_saveFile->Size = System::Drawing::Size(107, 41);
-			this->b_saveFile->TabIndex = 47;
+			this->b_saveFile->TabIndex = 9;
 			this->b_saveFile->Text = L"Choose Save File...";
 			this->b_saveFile->UseVisualStyleBackColor = true;
 			this->b_saveFile->Click += gcnew System::EventHandler(this, &MyForm::b_saveFile_Click);
@@ -766,7 +818,7 @@ private: System::Windows::Forms::Label^  label11;
 			// chk_stf
 			// 
 			this->chk_stf->AutoSize = true;
-			this->chk_stf->Location = System::Drawing::Point(733, 535);
+			this->chk_stf->Location = System::Drawing::Point(733, 540);
 			this->chk_stf->Name = L"chk_stf";
 			this->chk_stf->Size = System::Drawing::Size(107, 17);
 			this->chk_stf->TabIndex = 48;
@@ -778,7 +830,7 @@ private: System::Windows::Forms::Label^  label11;
 			this->chk_atf->AutoSize = true;
 			this->chk_atf->Checked = true;
 			this->chk_atf->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->chk_atf->Location = System::Drawing::Point(733, 551);
+			this->chk_atf->Location = System::Drawing::Point(733, 556);
 			this->chk_atf->Name = L"chk_atf";
 			this->chk_atf->Size = System::Drawing::Size(94, 17);
 			this->chk_atf->TabIndex = 49;
@@ -887,20 +939,22 @@ private: System::Windows::Forms::Label^  label11;
 			// 
 			// b_transferDataFile
 			// 
+			this->b_transferDataFile->Enabled = false;
 			this->b_transferDataFile->Location = System::Drawing::Point(1083, 378);
 			this->b_transferDataFile->Name = L"b_transferDataFile";
 			this->b_transferDataFile->Size = System::Drawing::Size(152, 41);
-			this->b_transferDataFile->TabIndex = 59;
+			this->b_transferDataFile->TabIndex = 11;
 			this->b_transferDataFile->Text = L"Transfer SD Data File";
 			this->b_transferDataFile->UseVisualStyleBackColor = true;
 			this->b_transferDataFile->Click += gcnew System::EventHandler(this, &MyForm::b_transferDataFile_Click);
 			// 
 			// b_deleteDataFile
 			// 
-			this->b_deleteDataFile->Location = System::Drawing::Point(1083, 492);
+			this->b_deleteDataFile->Enabled = false;
+			this->b_deleteDataFile->Location = System::Drawing::Point(1083, 489);
 			this->b_deleteDataFile->Name = L"b_deleteDataFile";
-			this->b_deleteDataFile->Size = System::Drawing::Size(152, 41);
-			this->b_deleteDataFile->TabIndex = 60;
+			this->b_deleteDataFile->Size = System::Drawing::Size(152, 23);
+			this->b_deleteDataFile->TabIndex = 12;
 			this->b_deleteDataFile->Text = L"Delete SD Data File";
 			this->b_deleteDataFile->UseVisualStyleBackColor = true;
 			this->b_deleteDataFile->Click += gcnew System::EventHandler(this, &MyForm::b_deleteDataFile_Click);
@@ -917,35 +971,73 @@ private: System::Windows::Forms::Label^  label11;
 			// tb_TXFileLocation
 			// 
 			this->tb_TXFileLocation->BackColor = System::Drawing::SystemColors::Control;
-			this->tb_TXFileLocation->Location = System::Drawing::Point(1061, 438);
+			this->tb_TXFileLocation->Location = System::Drawing::Point(1061, 437);
 			this->tb_TXFileLocation->Name = L"tb_TXFileLocation";
 			this->tb_TXFileLocation->ReadOnly = true;
 			this->tb_TXFileLocation->Size = System::Drawing::Size(196, 20);
 			this->tb_TXFileLocation->TabIndex = 62;
 			// 
-			// progbar_TX
-			// 
-			this->progbar_TX->Location = System::Drawing::Point(1157, 463);
-			this->progbar_TX->Name = L"progbar_TX";
-			this->progbar_TX->Size = System::Drawing::Size(100, 23);
-			this->progbar_TX->TabIndex = 63;
-			// 
 			// label11
 			// 
 			this->label11->AutoSize = true;
-			this->label11->Location = System::Drawing::Point(1061, 468);
+			this->label11->Location = System::Drawing::Point(1057, 465);
 			this->label11->Name = L"label11";
-			this->label11->Size = System::Drawing::Size(93, 13);
+			this->label11->Size = System::Drawing::Size(102, 13);
 			this->label11->TabIndex = 64;
-			this->label11->Text = L"Transfer Progress:";
+			this->label11->Text = L"TX Progress (bytes):";
+			// 
+			// b_etherConnect
+			// 
+			this->b_etherConnect->Location = System::Drawing::Point(729, 404);
+			this->b_etherConnect->Name = L"b_etherConnect";
+			this->b_etherConnect->Size = System::Drawing::Size(153, 33);
+			this->b_etherConnect->TabIndex = 66;
+			this->b_etherConnect->Text = L"Connect to Ethernet";
+			this->b_etherConnect->UseVisualStyleBackColor = true;
+			this->b_etherConnect->Click += gcnew System::EventHandler(this, &MyForm::b_etherConnect_Click);
+			// 
+			// tb_buff_disp_freq
+			// 
+			this->tb_buff_disp_freq->Location = System::Drawing::Point(858, 518);
+			this->tb_buff_disp_freq->Name = L"tb_buff_disp_freq";
+			this->tb_buff_disp_freq->Size = System::Drawing::Size(23, 20);
+			this->tb_buff_disp_freq->TabIndex = 67;
+			this->tb_buff_disp_freq->Text = L"10";
+			// 
+			// label12
+			// 
+			this->label12->AutoSize = true;
+			this->label12->Location = System::Drawing::Point(732, 520);
+			this->label12->Name = L"label12";
+			this->label12->Size = System::Drawing::Size(125, 13);
+			this->label12->TabIndex = 68;
+			this->label12->Text = L"Buffer Display Frequency";
+			// 
+			// tb_TX_progress
+			// 
+			this->tb_TX_progress->BackColor = System::Drawing::SystemColors::Control;
+			this->tb_TX_progress->Location = System::Drawing::Point(1157, 462);
+			this->tb_TX_progress->Name = L"tb_TX_progress";
+			this->tb_TX_progress->Size = System::Drawing::Size(100, 20);
+			this->tb_TX_progress->TabIndex = 69;
+			// 
+			// endDAQToolStripMenuItem
+			// 
+			this->endDAQToolStripMenuItem->Name = L"endDAQToolStripMenuItem";
+			this->endDAQToolStripMenuItem->Size = System::Drawing::Size(215, 22);
+			this->endDAQToolStripMenuItem->Text = L"End DAQ";
+			this->endDAQToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::endDAQToolStripMenuItem_Click);
 			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(1269, 673);
+			this->Controls->Add(this->tb_TX_progress);
+			this->Controls->Add(this->label12);
+			this->Controls->Add(this->tb_buff_disp_freq);
+			this->Controls->Add(this->b_etherConnect);
 			this->Controls->Add(this->label11);
-			this->Controls->Add(this->progbar_TX);
 			this->Controls->Add(this->tb_TXFileLocation);
 			this->Controls->Add(this->label10);
 			this->Controls->Add(this->b_deleteDataFile);
@@ -1002,7 +1094,9 @@ private:	//declare class-wide variables here
 	double m_energyUpperCut{ 0.0 };
 	double m_fomLeftCut{ 0.0 };
 	double m_fomRightCut{ 0.0 };
-		
+	SOCKET ConnectSocket = INVALID_SOCKET;
+	INT64 g_RECV_file_size;
+
 private: void findPorts(void)
 {
 	array<Object^>^ objectArray = SerialPort::GetPortNames();
@@ -1112,7 +1206,11 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 	if (!psdCap_run)	//stop capturing data
 	{
 		this->b_capturePSD->Text = "Capture PSD";
-		this->tb_updates->Text = "Stop button pressed; background worker cancelled.";
+		this->tb_updates->Text = "Stop button pressed; background worker being cancelled.";
+		//send the message to stop DAQ on the board
+		this->serialPort1->WriteLine("q");
+		Sleep(500);
+		//cancel the worker thread
 		backgroundWorker1->CancelAsync();
 		return;	//returns out of this function call to the still running call of this function
 	}
@@ -1139,12 +1237,16 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 		
 	//put the serial port number into the data for background worker struct so we can pass it in
 	s_variables->portName = this->comboBox1->Text;
+	if (this->tb_buff_disp_freq->Text == String::Empty)
+		s_variables->bufferDisplayFrequency = "10";
+	else
+		s_variables->bufferDisplayFrequency = this->tb_buff_disp_freq->Text;
 	
-	if (psdCap_run && (chk_atf->Checked || chk_stf->Checked))	//if we are running and one of the check buttons is checked, get the file name to pass
+	if (psdCap_run && chk_atf->Checked)	//if we are running and one of the check buttons is checked, get the file name to pass
 	{
 		if (this->tb_savefilename->Text == String::Empty)		//if checked, but no file name, return
 		{
-			this->tb_updates->Text = "Please choose a file save or append location.";
+			this->tb_updates->Text = "Please choose a file save location.";
 			this->b_capturePSD->Text = "Capture PSD";
 			psdCap_run = !psdCap_run;
 			return;
@@ -1197,7 +1299,7 @@ private: System::Void b_capturePSD_Click(System::Object^  sender, System::EventA
 
 	//Start the background worker and pass in s_variables which is a filename and port number
 	backgroundWorker1->RunWorkerAsync(s_variables);
-
+	g_RECV_file_size = 0;	//reset the file size
 	return;
 }//eoCapturePSDclick
 
@@ -1468,9 +1570,14 @@ private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::
 {
 	BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
 
-	std::string str_portName;	String^ portname = safe_cast<dataForBkgdWorker^>(e->Argument)->portName;
-	std::string str_fileName;	String^ filename = safe_cast<dataForBkgdWorker^>(e->Argument)->mstrFileName;
-	str_fileName = msclr::interop::marshal_as<std::string>(filename);
+	String^ portname = safe_cast<dataForBkgdWorker^>(e->Argument)->portName;
+	String^ buffDispFreq = safe_cast<dataForBkgdWorker^>(e->Argument)->bufferDisplayFrequency;
+	String^ filename = safe_cast<dataForBkgdWorker^>(e->Argument)->mstrFileName;
+
+	int m_buffDispFreq = int::Parse(buffDispFreq);
+	if (m_buffDispFreq <= 0 || m_buffDispFreq > 1000)
+		m_buffDispFreq = 10;
+	std::string str_fileName = msclr::interop::marshal_as<std::string>(filename);
 	std::ofstream outputFile;
 	outputFile.open(str_fileName, std::ios::app);
 	if (!outputFile)
@@ -1495,144 +1602,76 @@ private: System::Void backgroundWorker1_DoWork(System::Object^  sender, System::
 	//local variables
 	int index{ 0 };
 	g_dataBuffer = gcnew array<unsigned int>(DATABUFFER_SIZE) {};	//this buffer gets passed to the Progress changed function for processing //holds all 3 arrays (AA, LPF, DFF)
-	//ethernet variables
-	WSADATA wsaData;
-	SOCKET ConnectSocket = INVALID_SOCKET;
-	struct addrinfo *result = NULL,
-		*ptr = NULL,
-		hints;
+	
 	char buffer[20] = "1";
 	char *sendbuf = buffer;
-
 	unsigned char recvbuf[DATA_BUFLEN]{};
 	int recvbuflen = DATA_BUFLEN;	//length in bytes
 	int iResult;
 	int iIter = 0;
 	int event_counter = 0;
-	unsigned int reassemble_val = 0;
 	int m_bytes_received = 0;
-	int m_packets_recvd = -1;
+	int m_packets_recvd = 0;
 
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;			//can technically choose AF_UNSPEC or AF_INET, stick with AF_INET
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	std::string m_ip_addr = "192.168.250.2";	//define the ip address for the server that we wish to connect to
+	int wsaResult = 0;
 
-	//until the button to stop is pressed, we'll try and collect data
-	while (worker->CancellationPending == false)//loop 1
+	while (worker->CancellationPending == false)//loop 2
 	{
-		// INITIALIZE Winsock
-		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (iResult != 0) {
-			worker->ReportProgress(-13, iResult);	//tell the user we couldn't initialize winsock
-			return;
-		}
-
-		// Resolve the server ADDRESS and port information
-		iResult = getaddrinfo(m_ip_addr.c_str(), DEFAULT_PORT, &hints, &result);
-		if (iResult != 0) {
-			worker->ReportProgress(-14, iResult);	//tell the user we had trouble getting the adress info
-			WSACleanup();
-			return;
-		}
-
-		// Creating the SOCKET we'll use to connect to the server
-		ConnectSocket = socket(result->ai_family, SOCK_STREAM, IPPROTO_TCP);
-		if (ConnectSocket == INVALID_SOCKET) {
-			worker->ReportProgress(-15, iResult);	//tell the user we couldn't create the socket
-			WSACleanup();
-			return;
-		}
-
-		//pass the created socket to the connect function and attempt to CONNECT
-		iResult = connect(ConnectSocket, result->ai_addr, (int)result->ai_addrlen);
-		if (iResult == SOCKET_ERROR)
-		{
-			worker->ReportProgress(-16, iResult);	//tell the user we couldn't connect to the server
+		iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+		if (iResult == SOCKET_ERROR) {
+			worker->ReportProgress(-18, WSAGetLastError());	//tell the user we failed a send
+			wsaResult = WSAGetLastError();
 			closesocket(ConnectSocket);
-			ConnectSocket = INVALID_SOCKET;
 			WSACleanup();
-			return;
+			break;
 		}
 
-		//set a timeout for the socket that we are using, this will make it jump out of receive if we haven't gotten anything in 10 ms
-		DWORD sockTO = 10;
-		//SO_RCVTIMEO specifies the timout, in milliseconds, for how long recv will block for
-		setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
-
-		worker->ReportProgress(-17);	//tell the user we have connected to the board with our socket
-
-		while (worker->CancellationPending == false)//loop 2
+		//each packet from the board is 35*36=1260 bytes long and has 35*9 integers //there will be 13 packets total per full buffer 
+		iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
+		if (iResult > 0)
 		{
-			iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-			if (iResult == SOCKET_ERROR) {
-				worker->ReportProgress(-18, WSAGetLastError());	//tell the user we failed a send
-				closesocket(ConnectSocket);
-				WSACleanup();
-				break;
-			}
-
-			//each packet from the board is 32*32=1024 bytes long and has 32*8 integers -> 32 events in it
-			//there will be 48 packets total per full buffer (full buffer = AA + LPF + DFF)
-			iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
-			if (iResult > 0)
+			iIter = 0;
+			event_counter = 0;
+			while (event_counter < EVENT_SIZE * EVENTS_PER_BUFFER)
 			{
-				//take in the packet and reassemble the ints from each buffer
-				iIter = 0;
-				event_counter = 0;
-				//loop over the packet we received and reassemble the ints in each event
-				while (event_counter < 32 * 8)
-				{
-					g_dataBuffer[index] = (recvbuf[iIter + 3] << 24) | (recvbuf[iIter + 2] << 16) | (recvbuf[iIter + 1] << 8) | recvbuf[iIter];
-					outputFile << g_dataBuffer[index] << std::endl;
+				g_dataBuffer[index] = (recvbuf[iIter + 3] << 24) | (recvbuf[iIter + 2] << 16) | (recvbuf[iIter + 1] << 8) | recvbuf[iIter];
+				outputFile << g_dataBuffer[index] << std::endl;
 
-					iIter += 4;
-					event_counter++;
-					index++;
-				}
-
-				//we have received a full buffer, send it to ProgressChanged to be processed and displayed
-				//We can place a switch here that will send only every Nth full buffer to ProgressChanged
-				// This is in case processing the buffers causes too much of a hit to the system and we can't keep up at high event rates
-				// ---i'm implementing the switch to send only one out of every ten buffers to the display
-				// using the variable m_packets_recvd to keep track
-				//Currently we send every buffer to be processed and displayed
-				m_bytes_received += iResult;	iResult = 0;
-				if (m_bytes_received >= 49152)
-				{
-					m_packets_recvd++;
-					if (m_packets_recvd == 0 || m_packets_recvd == 10)
-					{
-						//pass the data to the report buffer for processing and display
-						worker->ReportProgress(414141, g_dataBuffer);
-						m_packets_recvd = 0;
-					}
-					m_bytes_received = 0;
-					index = 0;
-				}
+				iIter += 4;
+				event_counter++;
+				index++;
 			}
-			else
+
+			//we have received a full buffer, send it to ProgressChanged to be processed and displayed
+			//We can place a switch here that will send only every Nth full buffer to ProgressChanged
+			// This is in case processing the buffers causes too much of a hit to the system and we can't keep up at high event rates
+			// ---i'm implementing the switch to send only one out of every ten buffers to the display
+			// using the variable m_packets_recvd to keep track
+			//Currently we send every buffer to be processed and displayed
+			g_RECV_file_size += iResult;	//the total file size for this DAQ run //used to TX files and utilize the progress bar
+			m_bytes_received += iResult;	iResult = 0;
+			if (m_bytes_received >= DATA_BUFLEN)
 			{
-				if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
-					worker->ReportProgress(-19, WSAGetLastError());
+				m_packets_recvd++;
+				if (m_packets_recvd == 0 || m_packets_recvd == m_buffDispFreq)
+				{
+					//pass the data to the report buffer for processing and display
+					worker->ReportProgress(414141, g_dataBuffer);
+					m_packets_recvd = 0;
+				}
+				m_bytes_received = 0;
+				index = 0;
 			}
-		}//end of loop 2
-
-		// cleanup
-		closesocket(ConnectSocket);
-		WSACleanup();
-
-		//unless the background worker has been cancelled, from here we will loop back and restart the connection
-	}//end of loop 1
-
-	//send the message to stop DAQ on the board
-	this->serialPort1->WriteLine("q\r");
-	Sleep(1000);
+		}
+		else
+		{
+			if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
+				worker->ReportProgress(-19, WSAGetLastError());
+		}
+	}//end of loop 2
 
 	outputFile.close();
-	serialPort1->Close();
-	worker->ReportProgress(-30);	//tell the user we have stopped DAQ
+	//worker->ReportProgress(-30);	//tell the user we have stopped DAQ
 }
 private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender, System::ComponentModel::ProgressChangedEventArgs^  e) 
 {
@@ -1654,25 +1693,25 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	}
 	else if (e->ProgressPercentage == -13)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		 int^ retVal = safe_cast< int^>(e->UserState);
 		this->tb_updates->Text = "Error initializing Winsock with code " + retVal;
 		return;
 	}
 	else if (e->ProgressPercentage == -14)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		 int^ retVal = safe_cast< int^>(e->UserState);
 		this->tb_updates->Text = "getaddrinfo failed with error " + retVal;
 		return;
 	}
 	else if (e->ProgressPercentage == -15)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		 int^ retVal = safe_cast< int^>(e->UserState);
 		this->tb_updates->Text = "Socket creation failed with error " + retVal;
 		return;
 	}
 	else if (e->ProgressPercentage == -16)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		 int^ retVal = safe_cast< int^>(e->UserState);
 		this->tb_updates->Text = "Connect failed with error " + retVal;
 		return;
 	}
@@ -1683,25 +1722,25 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	}
 	else if (e->ProgressPercentage == -18)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
-		this->tb_updates->Text = "Failed to send with " + retVal + ". Restarting connection.";
+		 int^ retVal = safe_cast< int^>(e->UserState);
+		this->tb_updates->Text = "DAQ Failed to send with " + retVal + ". Restarting connection.";
 		return;
 	}
 	else if (e->ProgressPercentage == -19)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		 int^ retVal = safe_cast< int^>(e->UserState);
 		this->tb_updates->Text = "Recv failed with " + retVal + ". Restarting connection.";
 		return;
 	}
 	else if (e->ProgressPercentage == -20)
 	{
-		unsigned int^ retVal = safe_cast<unsigned int^>(e->UserState);
+		 int^ retVal = safe_cast< int^>(e->UserState);
 		this->tb_updates->Text = "Received full buffer, updating display.";
 		return;
 	}
 	else if (e->ProgressPercentage == -30)
 	{
-		this->tb_updates->Text = "Data acquisition stopped.";
+		this->tb_updates->Text = "Data acquisition thread stopped.";
 		return;
 	}
 	else if (e->ProgressPercentage == 414141)	//the only else if where we stay in this function to parse out data and print to the charts
@@ -1721,21 +1760,22 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	int index(0);
 	int eventIndex(0);
 
-	array<unsigned int>^ dataBufferPassed = safe_cast<array<unsigned int>^>(e->UserState);	//this will be an unsigned int array[12288]
-	array<EventData>^ eventsSorted = gcnew array<EventData>(512);
+	array<unsigned int>^ dataBufferPassed = safe_cast<array<unsigned int>^>(e->UserState);	//this will be an unsigned int array[4095]
+	array<dataProductEvent>^ eventsSorted = gcnew array<dataProductEvent>(INPUT_BUFFER_SIZE);
 
 	//consume the first 111111 from databufferpassed
 	while (1)
 	{
 		if (dataBufferPassed[index] == 111111)
 		{
-			index++;	//increment by 1 (the next value is the real ID) and break
+			if (dataBufferPassed[index + 1] == 111111)
+				index++;	//increment by 1 (the next value is the real ID)
 			break;								
 		}
 		else
 			index++;	//if no, keep searching
 
-		if (index > DATABUFFER_SIZE)
+		if (index >= DATABUFFER_SIZE - INTS_PER_EVENT)
 		{
 			this->tb_updates->Text = "No data found. Please check settings.";
 			return;	//don't want to waste time trying to save this...
@@ -1743,7 +1783,7 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	}
 
 
-	while (index < DATABUFFER_SIZE)	//for sorting data //comment while verifying that we get data
+	while (index < DATABUFFER_SIZE - INTS_PER_EVENT)
 	{
 		switch (dataBufferPassed[index])
 		{
@@ -1789,12 +1829,12 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 			break;
 		}
 		
-		if (eventIndex > 511)	//if we are at the bottom, reset for the next parts of the struct
+		if (eventIndex > INPUT_BUFFER_SIZE - 1)	//if we are at the bottom, reset for the next parts of the struct
 		{
 			//index++;
 			eventIndex = 0;
 		}
-		if (index > 12280)	//if we are near the top, in the last event, jump out (it's garbage)
+		if (index > DATABUFFER_SIZE - INTS_PER_EVENT)	//if we are near the top, in the last event, jump out (it's garbage)
 			break;
 	}
 
@@ -1809,83 +1849,75 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	//this->tb_updates->Text = "Data sorted.";
 	this->checkBox1->Checked = true;
 	//Now that data is sorted, sift through and plot it
-	array<double>^ aablavgArray = gcnew array<double>(512);
+	array<double>^ aablavgArray = gcnew array<double>(INPUT_BUFFER_SIZE);
 	double bl1(0);	double bl2(0); double bl3(0); double bl4(0); double bl_avg(0);
 	double si(0); double li(0); double fi(0);
 	double psd(0);
 	double energy(0);
 
-	double dESpectrumBin(0.0);	
+	double dESpectrumBin(0.0);
 	double dFOMBin(0.0);
 	//double dFOMBinSize = (0.0);
 	int iESpectrumArrayIndex(0);
 	int iFOMArrayIndex(0);
 	int ii(0); int jj(0);
 
-	//array<int>^ g_iESpectrumArray = gcnew array<int>(1000);	//variables for energy spectrum and fom charts
-	//array<int>^ g_ifomarray = gcnew array<int>(1000);
-	//array<double>^ psdArray = gcnew array<double>(512) {};
-	//array<double>^ energyArray = gcnew array<double>(512) {};
-	//for (ii = 0; ii < 512; ii++)
-	//{
-	//	psdArray[ii] = 0.75 + 0.001*ii;
-	//	energyArray[ii] = 200 * ii;
-	//}
-	//ii = 0; //reset variable
+	//get the ints from the textboxes //OLD
+	//int i_short = int::Parse(this->tb_short->Text);
+	//int i_long = int::Parse(this->tb_long->Text);
+	//int i_full = int::Parse(this->tb_full->Text);
 
-	//get the ints from the textboxes
-	int i_short = int::Parse(this->tb_short->Text);
-	int i_long = int::Parse(this->tb_long->Text);
-	int i_full = int::Parse(this->tb_full->Text);
-
-	//testing variables, delete
-	int i_short_samples = 0; double d_short_samples_convert = 0.0;
-	int i_long_samples = 0; double d_long_samples_convert = 0.0;
-	int i_full_samples = 0; double d_full_samples_convert = 0.0;
+	//hard code this for now
+	//get the ints from the textboxes //NEW
+	double d_blSamples = ((INTEG_START_TIME + int::Parse(this->tb_baseline->Text)) / NS_TO_SAMPLES) + 1;
+	double d_siSamples = ((INTEG_START_TIME + int::Parse(this->tb_short->Text)) / NS_TO_SAMPLES) + 1;
+	double d_liSamples = ((INTEG_START_TIME + int::Parse(this->tb_long->Text)) / NS_TO_SAMPLES) + 1;
+	double d_fiSamples = ((INTEG_START_TIME + int::Parse(this->tb_full->Text)) / NS_TO_SAMPLES) + 1;
 
 	//this->tb_updates->Text = "Processing.";
 	this->checkBox2->Checked = true;
 
 	eventIndex = 0;	//reset this value
-	while (eventIndex < 512)	//plots the charts for each event
+	while (eventIndex < INPUT_BUFFER_SIZE)	//plots the charts for each event
 	{
-		si = 0;
-		li = 0;
-		fi = 0;
-		psd = 0;
-		energy = 0;
+		si = 0;	li = 0;	fi = 0;	psd = 0; energy = 0;
 
 		bl4 = bl3; bl3 = bl2; bl2 = bl1;
-		bl1 = eventsSorted[eventIndex].aaBaselineInt / (16.0 * 38.0);
+		bl1 = eventsSorted[eventIndex].aaBaselineInt / (16.0 * d_blSamples);
 		if (bl4 == 0.0)
 			bl_avg = bl1;
 		else
 			bl_avg = (bl4 + bl3 + bl2 + bl1) / 4.0;
 		aablavgArray[eventIndex] = bl_avg;
 
-		//testing, delete
-		i_short_samples = ((i_short + 52) / 4) + 38;
-		i_long_samples = ((i_long + 52) / 4) + 38;
-		i_full_samples = ((i_full + 52) / 4) + 38;
-		d_short_samples_convert = (double)i_short_samples;
-		d_long_samples_convert = (double)i_long_samples;
-		d_full_samples_convert = (double)i_full_samples;
-
-		si = eventsSorted[eventIndex].aaShortInt / 16.0 - (bl_avg * (((i_short + 52) / 4) + 38));
-		li = eventsSorted[eventIndex].aaLongInt / 16.0 - (bl_avg * (((i_long + 52) / 4) + 38));
-		fi = eventsSorted[eventIndex].aaFullInt / 16.0 - (bl_avg * (((i_full + 52) / 4) + 38));
+		//si = eventsSorted[eventIndex].aaShortInt / 16.0 - (bl_avg * (((i_short + 52) / 4) + 38));
+		//li = eventsSorted[eventIndex].aaLongInt / 16.0 - (bl_avg * (((i_long + 52) / 4) + 38));
+		//fi = eventsSorted[eventIndex].aaFullInt / 16.0 - (bl_avg * (((i_full + 52) / 4) + 38));
+		si = (double)eventsSorted[eventIndex].aaShortInt / 16.0 - (bl_avg * d_siSamples);
+		li = (double)eventsSorted[eventIndex].aaLongInt / 16.0 - (bl_avg * d_liSamples);
+		fi = (double)eventsSorted[eventIndex].aaFullInt / 16.0 - (bl_avg * d_fiSamples);
 		if (si > 0 && li > 0)
-			psd = si / (li - si);
+			if (si == li)	//handle the situation where the integrals are the same
+				psd = 3.0;
+			else
+				psd = si / (li - si);
 		energy = 1.0 * fi + 0.0;
 
 		//plot code for PSD
 		if ((psd > 0 && psd < 2) && (energy > 0 && energy < 600000))
+		{
 			this->ch_PSD->Series["Series1"]->Points->AddXY(fi, psd);
-	
-		//plot code for FOM and Energy Spectrum
-		iESpectrumArrayIndex = Convert::ToInt32(energy / 600);	//check data is within the spectrum bins
-		iFOMArrayIndex = Convert::ToInt32(psd / 0.02);
-		if ((iESpectrumArrayIndex >= 0 && iESpectrumArrayIndex < 1000) && (iFOMArrayIndex >= 0 && iFOMArrayIndex < 99))	//if the point is within the array (on the chart)
+
+			//plot code for FOM and Energy Spectrum
+			iESpectrumArrayIndex = Convert::ToInt32(energy / 600);	//check data is within the spectrum bins
+			iFOMArrayIndex = Convert::ToInt32(psd / 0.02);
+		}
+		else
+		{
+			iESpectrumArrayIndex = 0;
+			iFOMArrayIndex = 0;
+		}
+		if ((iESpectrumArrayIndex > 0 && iESpectrumArrayIndex < 1000) && (iFOMArrayIndex > 0 && iFOMArrayIndex < 99))	//if the point is within the array (on the chart)
 		{
 			++g_iESpectrumArray[iESpectrumArrayIndex];
 			++g_iFOMArray[iFOMArrayIndex];
@@ -1912,14 +1944,13 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 	this->tb_updates->Text = "Done plotting.";
 	this->checkBox3->Checked = true;
 
-	
-
 	//save Erik's file here
-	std::ofstream outputFile_Erik;
-	outputFile_Erik.open("ndieaway.txt", std::ios::app);
-	for (index = 0; index < 511; index++)
+	/*
+	std::ofstream outputFile_raw;
+	outputFile_raw.open("runData_tabsep.txt", std::ios::app);
+	for (index = 0; index < INPUT_BUFFER_SIZE - 1; index++)
 	{
-		outputFile_Erik << std::setw(12) << eventsSorted[index].aaEventNumber << '\t'
+		outputFile_raw << std::setw(12) << eventsSorted[index].aaEventNumber << '\t'
 			<< std::setw(12) << eventsSorted[index].aaTotalEvents << '\t'
 			<< std::setw(11) << eventsSorted[index].lpfTTLSignal << '\t'
 			<< std::setw(16) << ((eventsSorted[index].dffTimeSmall * 128.0e-9) + (eventsSorted[index].dffTimeBig * 549.7558139)) << '\t'
@@ -1934,7 +1965,8 @@ private: System::Void backgroundWorker1_ProgressChanged(System::Object^  sender,
 			<< std::setw(11) << (eventsSorted[index].dffShortInt / 16.0) << '\t'
 			<< std::endl;
 	}
-	outputFile_Erik.close();
+	outputFile_raw.close();
+	*/
 	this->checkBox4->Checked = true;
 }
 private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^  sender, System::ComponentModel::RunWorkerCompletedEventArgs^  e) 
@@ -1944,6 +1976,10 @@ private: System::Void backgroundWorker1_RunWorkerCompleted(System::Object^  send
 		this->tb_updates->Text = "DAQ worker thread cancel success.";
 	else if (e->Error != nullptr)
 		MessageBox::Show(e->Error->Message);
+	else if (e->Cancelled == FALSE)
+	{
+		this->tb_updates->Text = "Stopping the DAQ run. Please wait...CancelAsync";
+	}
 }
 private: System::Void backgroundWorker2_DoWork(System::Object^  sender, System::ComponentModel::DoWorkEventArgs^  e) 
 {
@@ -1973,7 +2009,6 @@ private: System::Void timer1_Tick(System::Object^  sender, System::EventArgs^  e
 		 //Begin pinging the board to get the packets, they're the same size packets as data packets from DAQ
 private: System::Void b_transferDataFile_Click(System::Object^  sender, System::EventArgs^  e) {
 	this->b_transferDataFile->Text = "Transferring...";
-	this->progbar_TX->Value = 0;
 	//use the same procedure as we use in DAQ to connect and accept packets
 	const System::Windows::Forms::DialogResult idYES = (System::Windows::Forms::DialogResult)IDYES;
 	const System::Windows::Forms::DialogResult idNO = (System::Windows::Forms::DialogResult)IDNO;
@@ -2009,6 +2044,8 @@ private: System::Void b_transferDataFile_Click(System::Object^  sender, System::
 		return;
 		break;
 	}
+	this->tb_TX_progress->Text = "0 bytes";
+	this->tb_updates->Text = "Transferring the file...";
 	Application::DoEvents();
 
 	//now we know there is a file we can save to, open the file to transfer into it
@@ -2016,36 +2053,21 @@ private: System::Void b_transferDataFile_Click(System::Object^  sender, System::
 	std::string tx_filename = msclr::interop::marshal_as<std::string>(tb_TXFileLocation->Text);
 	tx_file.open(tx_filename, std::ios::app);
 
-	//start the ethernet connection
-	this->tb_updates->Text = "Connecting to the board...";
-
-	//ethernet variables
-	WSADATA wsaData;
-	SOCKET ConnectSocket = INVALID_SOCKET;
-	struct addrinfo *result = NULL,
-		*ptr = NULL,
-		hints;
 	char buffer[20] = "1";
 	char *sendbuf = buffer;
-
 	unsigned char recvbuf[DATA_BUFLEN]{};
 	int recvbuflen = DATA_BUFLEN;	//length in bytes
 	int iResult;
 	int iIter = 0;
 	int event_counter = 0;
+	int m_timed_out = 0;
 	INT64 m_bytes_received = 0;
-	System::String^ m_str_TX_file_size;
 	INT64 m_TX_file_size = 0;
 	INT64 m_TX_steps = 1;
-	INT64 m_TX_step_size = 0;
+	INT64 m_TX_step_size = DATA_BUFLEN;
+	INT64 m_TX_steps_to_take = 0;
 
 	bool m_running = TRUE;
-
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;			//can technically choose AF_UNSPEC or AF_INET, stick with AF_INET
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	std::string m_ip_addr = "192.168.250.2";	//define the ip address for the server that we wish to connect to
 
 //check/open the serial connection to call the TX function
 	if (this->comboBox1->Text == String::Empty) {
@@ -2063,138 +2085,77 @@ private: System::Void b_transferDataFile_Click(System::Object^  sender, System::
 		}
 	}
 
-	//make sure we don't get garbage
-	if (this->serialPort1->BytesToRead > 0)
-		this->serialPort1->ReadExisting();
-	//call the TX function on the board
 	serialPort1->WriteLine("10");
 	Sleep(500);
-	m_str_TX_file_size = serialPort1->ReadLine();	//gets the file size, tells us how many bytes we should expect to read
-	m_TX_file_size = System::Convert::ToInt64(m_str_TX_file_size);
-	if (m_TX_file_size == -20)
-	{
-		this->tb_updates->Text = "Error opening the file on the board.";
-		this->b_transferDataFile->Text = "Transfer SD Data File";
-		tx_file.close();
-		return;
-	}
-	m_TX_step_size = m_TX_file_size / 10;
 
-	//begin the ethernet loop
+	DWORD sockTO = 10;
+	//SO_RCVTIMEO specifies the timout, in ms, for blocking recv calls
+	setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
+
+	//begin packet send/receive loop
 	while (m_running)
 	{
-		// INITIALIZE Winsock
-		iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (iResult != 0) {
-			this->tb_updates->Text = "Error initializing Winsock with code " + iResult;
-			this->b_transferDataFile->Text = "Transfer SD Data File";
-			tx_file.close();
-			return;
-		}
-
-		// Resolve the server ADDRESS and port information
-		iResult = getaddrinfo(m_ip_addr.c_str(), DEFAULT_PORT, &hints, &result);
-		if (iResult != 0) {
-			this->tb_updates->Text = "getaddrinfo failed with error " + iResult;
-			this->b_transferDataFile->Text = "Transfer SD Data File";
-			WSACleanup();
-			tx_file.close();
-			return;
-		}
-
-		// Creating the SOCKET we'll use to connect to the server
-		ConnectSocket = socket(result->ai_family, SOCK_STREAM, IPPROTO_TCP);
-		if (ConnectSocket == INVALID_SOCKET) {
-			this->tb_updates->Text = "Socket creation failed with error " + iResult;
-			this->b_transferDataFile->Text = "Transfer SD Data File";
-			WSACleanup();
-			tx_file.close();
-			return;
-		}
-
-		//pass the created socket to the connect function and attempt to CONNECT
-		iResult = connect(ConnectSocket, result->ai_addr, (int)result->ai_addrlen);
-		if (iResult == SOCKET_ERROR)
-		{
-			this->tb_updates->Text = "Connect failed with error " + iResult;
-			this->b_transferDataFile->Text = "Transfer SD Data File";
+		iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+		if (iResult == SOCKET_ERROR) {
+			this->tb_updates->Text = "TX Failed to send with " + WSAGetLastError() + ". Reconnect to the board again.";
+			this->b_etherConnect->Enabled = TRUE;
 			closesocket(ConnectSocket);
-			ConnectSocket = INVALID_SOCKET;
 			WSACleanup();
 			tx_file.close();
-			return;
+			break;
 		}
 
-		//set a timeout for the socket that we are using, this will make it jump out of receive if we haven't gotten anything in 10 ms
-		DWORD sockTO = 10;
-		//SO_RCVTIMEO specifies the timout, in milliseconds, for how long recv will block for
-		setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
-
-		this->tb_updates->Text = "Connected. Transferring the file.";
-		//begin packet send/receive loop
-		while (m_running)
+		iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
+		if (iResult > 0)
 		{
-			iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-			if (iResult == SOCKET_ERROR) {
-				this->tb_updates->Text = "Failed to send with " + WSAGetLastError() + ". Restarting connection.";
+			m_timed_out = 0;	//reset this each time we get a packet
+			//take in the packet and reassemble the ints from each buffer
+			iIter = 0;
+			event_counter = 0;
+			//loop over the packet we received and reassemble the ints in each event
+			while (event_counter < EVENT_SIZE * EVENTS_PER_BUFFER)
+			{
+				tx_file << ((recvbuf[iIter + 3] << 24) | (recvbuf[iIter + 2] << 16) | (recvbuf[iIter + 1] << 8) | recvbuf[iIter]) << std::endl;
+
+				iIter += 4;
+				event_counter++;
+			}
+
+			//updates a bar every 1% and breaks out when we're done transferring
+			m_bytes_received += iResult;	iResult = 0;
+			if (m_bytes_received >= m_TX_step_size * m_TX_steps)
+			{
+				m_TX_steps++;
+				this->tb_TX_progress->Text = m_bytes_received + " bytes";
+				Application::DoEvents();
+			}
+		}
+		else
+		{
+			if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
+			{
+				this->tb_updates->Text = "Receive failed with error " + WSAGetLastError() + ". Reconnect to the board again.";
+				this->b_etherConnect->Enabled = TRUE; 
 				closesocket(ConnectSocket);
 				WSACleanup();
+				tx_file.close();
 				break;
 			}
-
-			//each packet from the board is 32*32=1024 bytes long and has 32*8 integers -> 32 events in it
-			//there will be 48 packets total per full buffer (full buffer = AA + LPF + DFF)
-			iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
-			if (iResult > 0)
+			else if (WSAGetLastError() == 10060)
+				m_timed_out++;
+			if (m_timed_out > 10)
 			{
-				//take in the packet and reassemble the ints from each buffer
-				iIter = 0;
-				event_counter = 0;
-				//loop over the packet we received and reassemble the ints in each event
-				while (event_counter < 32 * 8)
-				{
-					tx_file << ((recvbuf[iIter + 3] << 24) | (recvbuf[iIter + 2] << 16) | (recvbuf[iIter + 1] << 8) | recvbuf[iIter]) << std::endl;
-
-					iIter += 4;
-					event_counter++;
-				}
-
-				//let the user know how the transfer is going
-				//updates a bar every 10% and breaks out when we're done transferring
-				m_bytes_received += iResult;	iResult = 0;
-				if (m_bytes_received >= m_TX_step_size * m_TX_steps)
-				{
-					m_TX_steps++;
-					this->progbar_TX->PerformStep();	//performs a step //steps are 10% or 10/100
-				}
-				if (m_bytes_received >= m_TX_file_size)
-				{
-					//we can stop because we have received the entire file
-					this->tb_updates->Text = "Finished receiving packets. " + m_bytes_received + " bytes received.";
-					break;
-				}
-
+				//if we have not gotten a packet in 2s, then we will stop
+				this->tb_updates->Text = "Finished receiving packets. " + m_bytes_received + " bytes received.";
+				break;
 			}
-			else
-			{
-				if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
-				{
-					this->tb_updates->Text = "Receive failed with error " + WSAGetLastError();
-					this->b_transferDataFile->Text = "Transfer SD Data File";
-					tx_file.close();
-					return;
-				}
-			}
-		}//end of send/recv loop
+		}
+	}//end of send/recv loop
 
-		// cleanup
-		closesocket(ConnectSocket);
-		WSACleanup();
-		if (m_bytes_received >= m_TX_file_size)
-			break;
-		//unless we have read enough bytes, we will loop back and restart the connection to try and receive the rest
-	}//end of Ethernet loop
-	
+	//quit from the loop, this way we always end up back at the main menu
+	serialPort1->WriteLine("q");
+	Sleep(500);
+
 	this->b_transferDataFile->Text = "Transfer SD Data File";
 	tx_file.close();
 	return; 
@@ -2230,6 +2191,7 @@ private: System::Void b_deleteDataFile_Click(System::Object^  sender, System::Ev
 	if (this->serialPort1->BytesToRead > 0)
 	{
 		m_str_delete_ret = serialPort1->ReadLine();	//gets the file size, tells us how many bytes we should expect to read
+		//if this throws an exception, just restart the connection
 		m_delete_ret = System::Convert::ToInt64(m_str_delete_ret);
 	}
 
@@ -2241,6 +2203,242 @@ private: System::Void b_deleteDataFile_Click(System::Object^  sender, System::Ev
 	else
 		this->tb_updates->Text = "Successfully deleted the SD card file.";
 
+	return;
+}
+
+		 //connect to the serial port and send a couple of 'q's so that the board leaves DAQ?
+private: System::Void recoverMMToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+	this->tb_updates->Text = "Recovering to the main menu...";
+	//check/open the serial connection to call the TX function
+	if (this->comboBox1->Text == String::Empty) {
+		this->tb_updates->Text = "Select a port above.";
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen)
+		{
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+		}
+	}
+
+	this->tb_updates->Text = "Commanding the board...";
+	//make sure we don't get garbage
+	if (this->serialPort1->BytesToRead > 0)
+		this->serialPort1->ReadExisting();
+	//quit to the main menu
+	serialPort1->WriteLine("q");
+	Sleep(1000);
+	this->tb_updates->Text = "Commanding the board 1...";
+	Application::DoEvents();
+	serialPort1->WriteLine("q");
+	Sleep(2000);
+	this->tb_updates->Text = "Commanding the board 2...";
+	Application::DoEvents();
+	serialPort1->WriteLine("q");
+	Sleep(3000);
+	this->tb_updates->Text = "Board may be recovered.";
+
+}
+
+private: System::Void b_etherConnect_Click(System::Object^  sender, System::EventArgs^  e) {
+	this->tb_updates->Text = "Connecting to the board...";
+	//ethernet variables
+	WSADATA wsaData;
+	struct addrinfo *result = NULL,
+		*ptr = NULL,
+		hints;
+	char buffer[20] = "Hi there!";
+	char *sendbuf = buffer;
+
+	//other variables
+	unsigned char recvbuf[DATA_BUFLEN]{};
+	int recvbuflen = DATA_BUFLEN;	//length in bytes
+	int iResult;
+	int iIter = 0;
+	int event_counter = 0;
+	unsigned int reassemble_val = 0;
+	int m_bytes_received = 0;
+	int m_packets_recvd = 0;
+
+	bool m_running = TRUE;
+
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;			//chose AF_INET over AF_UNSPEC //try unspec
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	std::string m_ip_addr = "192.168.250.2";	//define the ip address for the server that we wish to connect to
+
+	// Initialize Winsock
+	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0) {
+		this->tb_updates->Text = "Error initializing Winsock with code " + iResult;
+		return;
+	}
+
+	// Resolve the server address and port
+	this->tb_updates->Text = "Resolving the address and port information...";
+	iResult = getaddrinfo(m_ip_addr.c_str(), DEFAULT_PORT, &hints, &result);
+	if (iResult != 0) {
+		this->tb_updates->Text = "getaddrinfo failed with error " + iResult;
+		WSACleanup();
+		return;
+	}
+
+	// Attempt to connect to an address until one succeeds
+	this->tb_updates->Text = "Creating the socket...";
+	ConnectSocket = socket(result->ai_family, SOCK_STREAM, IPPROTO_TCP);
+	if (ConnectSocket == INVALID_SOCKET) {
+		this->tb_updates->Text = "socket failed with error: " + WSAGetLastError();
+		WSACleanup();
+		return;
+	}
+
+	//pass the created socket to the connect function
+	this->tb_updates->Text = "Attempting to connect to the socket...";
+	iResult = connect(ConnectSocket, result->ai_addr, (int)result->ai_addrlen);
+	if (iResult == SOCKET_ERROR)
+	{
+		closesocket(ConnectSocket);
+		ConnectSocket = INVALID_SOCKET;
+		this->tb_updates->Text = "socket failed with error: " + WSAGetLastError();
+		WSACleanup();
+		return;
+	}
+
+	//set a timeout for the socket that we are using, this will make it jump out of receive if
+	// we haven't gotten anything in 100 ms
+	DWORD sockTO = 10;
+	//SO_RCVTIMEO specifies the timout, in ms, for blocking recv calls
+	iResult = setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
+	if (iResult != 0)
+	{
+		this->tb_updates->Text = "Set socket options failed with error: " + WSAGetLastError();
+		Application::DoEvents();
+		return;
+	}
+
+	this->tb_updates->Text = "Successfully connected. DAQ and transfer are now available.";
+	this->b_capturePSD->Enabled = TRUE;
+	this->b_deleteDataFile->Enabled = TRUE;
+	this->b_transferDataFile->Enabled = TRUE;
+	this->b_etherConnect->Enabled = FALSE;
+	Application::DoEvents();
+}
+private: System::Void closeEthernetConnectionToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+	this->tb_updates->Text = "Closing the ethernet connection to the board. Please reconnect.";
+	this->b_capturePSD->Enabled = FALSE;
+	this->b_deleteDataFile->Enabled = FALSE;
+	this->b_transferDataFile->Enabled = FALSE;
+	this->b_etherConnect->Enabled = TRUE;
+	Application::DoEvents();
+
+	//run the disconnect code to clean up
+	closesocket(ConnectSocket);
+	ConnectSocket = INVALID_SOCKET;
+	WSACleanup();
+
+	return;
+}
+private: System::Void endDAQToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+	this->tb_updates->Text = "Transferring the file...";
+	Application::DoEvents();
+
+	char buffer[20] = "1";
+	char *sendbuf = buffer;
+	unsigned char recvbuf[DATA_BUFLEN]{};
+	int recvbuflen = DATA_BUFLEN;	//length in bytes
+	int iResult;
+	int iIter = 0;
+	int event_counter = 0;
+	int m_timed_out = 0;
+	INT64 m_bytes_received = 0;
+	INT64 m_TX_file_size = 0;
+	INT64 m_TX_steps = 1;
+	INT64 m_TX_step_size = DATA_BUFLEN;
+	INT64 m_TX_steps_to_take = 0;
+
+	bool m_running = TRUE;
+
+	DWORD sockTO = 10;
+	//SO_RCVTIMEO specifies the timout, in ms, for blocking recv calls
+	setsockopt(ConnectSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&sockTO, sizeof(DWORD));
+
+
+	if (this->comboBox1->Text == String::Empty) {
+		this->tb_updates->Text = "Select a port above.";
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen)
+		{
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+		}
+	}
+
+	//quit from the loop, this way we always end up back at the main menu
+	serialPort1->WriteLine("q");
+	Sleep(500);
+
+	//begin packet send/receive loop
+	while (m_running)
+	{
+		iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+		if (iResult == SOCKET_ERROR) {
+			this->tb_updates->Text = "TX Failed to send with " + WSAGetLastError() + ". Reconnect to the board again.";
+			this->b_etherConnect->Enabled = TRUE;
+			closesocket(ConnectSocket);
+			WSACleanup();
+			break;
+		}
+
+		iResult = recv(ConnectSocket, (char *)recvbuf, recvbuflen, 0);
+		if (iResult > 0)
+		{
+			m_timed_out = 0;	//reset this each time we get a packet
+			//take in the packet and reassemble the ints from each buffer
+			iIter = 0;
+			event_counter = 0;
+			//loop over the packet we received and reassemble the ints in each event
+			while (event_counter < EVENT_SIZE * EVENTS_PER_BUFFER)
+			{
+				iIter += 4;
+				event_counter++;
+			}
+
+			m_bytes_received += iResult;	iResult = 0;
+			if (m_bytes_received >= m_TX_step_size * m_TX_steps)
+			{
+				m_TX_steps++;
+				this->tb_TX_progress->Text = m_bytes_received + " bytes";
+				Application::DoEvents();
+			}
+		}
+		else
+		{
+			if (WSAGetLastError() != 10060)	//time out error is 10060, we'll ignore that //we only care about other errors
+			{
+				this->tb_updates->Text = "Receive failed with error " + WSAGetLastError() + ". Reconnect to the board again.";
+				this->b_etherConnect->Enabled = TRUE;
+				closesocket(ConnectSocket);
+				WSACleanup();
+				break;
+			}
+			else if (WSAGetLastError() == 10060)
+				m_timed_out++;
+			if (m_timed_out > 10)
+			{
+				//if we have not gotten a packet in 2s, then we will stop
+				this->tb_updates->Text = "Finished receiving packets. " + m_bytes_received + " bytes received.";
+				break;
+			}
+		}
+	}//end of send/recv loop
+
+	this->b_transferDataFile->Text = "Transfer SD Data File";
 	return;
 }
 };

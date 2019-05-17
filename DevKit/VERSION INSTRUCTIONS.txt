@@ -1,0 +1,19 @@
+Each version folder has a working copy of the SINGR devkit code and an associated GUI.
+Updated 4/26/2019
+
+Version 1 	- Bitstream = SINGR_TRIG_418
+			- SDK options: old data product (AA, LPF, DFF), no SPI, yes ETHERNET, yes SERIAL
+			- GUI makes ethernet connection, makes serial connection, handles old data product
+			
+Version 2 	- Bitstream = SINGR_TRIG_418
+			- SDK options: old data product (AA, LPF, DFF), yes SPI, yes ETHERNET, yes SERIAL
+			- GUI makes ethernet connection, makes serial connection, handles old data product
+			
+Version 3 	- Bitstream = SINGR_TRIG_425
+			- SDK options: new data product, yes SPI, yes ETHERNET, yes SERIAL
+			- GUI makes ethernet connection, makes serial connection, handles new data product
+			
+Version 4 	- Bitstream = SINGR_502_SDK
+			- SDK options: new data product, yes SPI, yes ETHERNET, yes SERIAL
+			- GUI makes ethernet connection, makes serial connection, handles new data product, has new trigger, integrals
+						
