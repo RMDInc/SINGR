@@ -1,0 +1,14 @@
+Going to do the following commands:
+
+0 -> 0	//choose AA wfs
+1 -> 1	//enable system
+6		//collect WFs
+q		//quit
+
+12		//invert signal
+6		//collect WFs
+q		//quit
+
+13		//un-invert the signal
+6		//collect WFs
+q		//quit

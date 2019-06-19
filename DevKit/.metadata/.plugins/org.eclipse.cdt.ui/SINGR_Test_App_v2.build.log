@@ -1,0 +1,32 @@
+14:54:49 **** Auto Build of configuration Release for project SINGR_Test_App_v2 ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+' '
+'Building file: ../src/main.c'
+'Invoking: ARM v7 gcc compiler'
+arm-none-eabi-gcc -Wall -O0 -I"K:\users\GStoddard\SINGR_GitHub_Repository\DevKit\SINGR_Test_App_v2_bsp\ps7_cortexa9_0\include" -c -fmessage-length=0 -MT"src/main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"src/main.d" -MT"src/main.o" -o "src/main.o" "../src/main.c"
+../src/main.c: In function 'ReadCommandPoll':
+../src/main.c:749:35: warning: pointer targets in passing argument 2 of 'XUartPs_Recv' differ in signedness [-Wpointer-sign]
+   rbuff += XUartPs_Recv(&Uart_PS, &RecvBuffer[rbuff],(32 - rbuff));
+                                   ^
+In file included from ../src/LApp.h:20:0,
+                 from ../src/main.c:32:
+K:\users\GStoddard\SINGR_GitHub_Repository\DevKit\SINGR_Test_App_v2_bsp\ps7_cortexa9_0\include/xuartps.h:466:5: note: expected 'u8 * {aka unsigned char *}' but argument is of type 'char *'
+ u32 XUartPs_Recv(XUartPs *InstancePtr,u8 *BufferPtr,
+     ^~~~~~~~~~~~
+'Finished building: ../src/main.c'
+' '
+'Building target: SINGR_Test_App_v2.elf'
+'Invoking: ARM v7 gcc linker'
+arm-none-eabi-gcc -L"K:\users\GStoddard\SINGR_GitHub_Repository\DevKit\SINGR_Test_App_v2_bsp\ps7_cortexa9_0\lib" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -o "SINGR_Test_App_v2.elf"  ./src/PollUart.o ./src/i2c_access.o ./src/main.o ./src/platform_zynq.o ./src/ps7_init.o   -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lrsa,-lxil,-lgcc,-lc,--end-group
+'Finished building target: SINGR_Test_App_v2.elf'
+' '
+'Invoking: ARM v7 Print Size'
+arm-none-eabi-size SINGR_Test_App_v2.elf  |tee "SINGR_Test_App_v2.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+ 247384	  14868	3184944	3447196	 34999c	SINGR_Test_App_v2.elf
+'Finished building: SINGR_Test_App_v2.elf.size'
+' '
+
+14:54:53 Build Finished (took 3s.635ms)
+

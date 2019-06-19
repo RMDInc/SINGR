@@ -243,6 +243,8 @@ int main()
 
 	// *********** SPI SET UP ******************************
 	XSpiPs_Config *SpiConfig;
+	u8 SendBuf[3];
+	u32 ByteCount = 3;
 	unsigned int optionBits = XSPIPS_MASTER_OPTION | XSPIPS_FORCE_SSELECT_OPTION;
 
 	SpiConfig = XSpiPs_LookupConfig(XPAR_PS7_SPI_0_DEVICE_ID);	//defined in xparameters.h
@@ -265,9 +267,29 @@ int main()
 
 	//look at case option 7 from the Beta Probe project for what to do next
 	//enable the ADC
-	Xil_Out32(XPAR_AXI_GPIO_18_BASEADDR, 1);
+	Xil_Out32(XPAR_AXI_GPIO_18_BASEADDR, 1);	//enable the ADC
 	//sub-case option 6 VCM control
-
+	//TESTING 5-20-2019
+	SendBuf[0] = 0x00; //Writing 1 byte
+	SendBuf[1] = 0x0F; //Writing register 0x0f
+	SendBuf[2] = 0x02;
+	Status = XSpiPs_PolledTransfer(&SpiInstance, SendBuf, NULL, ByteCount);
+	//Transfering to hardware register
+	while(SpiInstance.IsBusy == TRUE)
+	{
+			//hold the system here
+	}
+	SendBuf[0] = 0x00;
+	SendBuf[1] = 0xFF;
+	SendBuf[2] = 0x01;
+	Status = XSpiPs_PolledTransfer(&SpiInstance, SendBuf, NULL, ByteCount);
+	while(SpiInstance.IsBusy == TRUE)
+	{
+			//hold the system here
+	}
+	//TESTING 5-20-2019
+//	xil_printf("VMC is enabled.\n");
+//	Xil_Out32(XPAR_AXI_GPIO_18_BASEADDR, 0);	//disable the ADC	//leave the ADC on,
 
 	// *********** Setup the Hardware Reset GPIO ****************//
 	GPIOConfigPtr = XGpioPs_LookupConfig(XPAR_PS7_GPIO_0_DEVICE_ID);
@@ -369,6 +391,10 @@ int main()
 //		xil_printf(" 7) Check the Size of the Data Buffered (Max = 4095) \n\r");
 //		xil_printf(" 8) Clear the Processed Data Buffers\n\r");
 //		xil_printf(" 9) Execute Print of Data on DRAM \n\r");
+//					10) Transfer Function
+//					11) Delete Function
+//					12) Invert Output Phase
+//					13) Un-Invert Output Phase
 //		xil_printf("******************************\n\n\r");
 //		while (XUartPs_IsSending(&Uart_PS)) {i++;}  // Wait until Write Buffer is Sent
 	// ******************* POLLING LOOP *******************//
@@ -389,8 +415,15 @@ int main()
 			Xil_Out32 (XPAR_AXI_GPIO_14_BASEADDR, ((u32)mode));
 			break;
 
-		case 1: //Enable or disable the system
-			enable_state = 1;
+		case 1: //Enable the system
+//			enable_state = 1; //TESTING 6/10/2019
+
+			//TESTING 6/10/2019
+			//this will allow us to turn the ADC on/off
+			ReadCommandPoll();
+			sscanf(RecvBuffer,"%01u",&enable_state);
+			//TESTING 6/10/2019
+
 			if (enable_state != 0 && enable_state != 1)
 				break;
 			Xil_Out32(XPAR_AXI_GPIO_18_BASEADDR, ((u32)enable_state));
@@ -437,17 +470,13 @@ int main()
 
 		case 6:
 			//print waveforms to the GUI
-			//set the mode with case 0:
 			//make this just like case 2, except we have a different mode
-
-//			mode = 0;
-//			Xil_Out32 (XPAR_AXI_GPIO_14_BASEADDR, ((u32)mode));	//set mode to processed data
 			enable_state = 1;
 			Xil_Out32 (XPAR_AXI_GPIO_18_BASEADDR, ((u32)enable_state));	//set enable device
 
 			ipollReturn = 0;
 
-			while(ipollReturn != 113)	//loop until gettting a 'q' in the RecvBuffer
+			while(ipollReturn != 113)	//loop until getting a 'q' in the RecvBuffer
 			{
 //				if(Xil_In32(XPAR_AXI_GPIO_11_BASEADDR) > 0)	//if the buffer is full, read it to SD
 					WFDAQ();	//eventually, need to put the buffer check back in (above) so that this doesn't just read garbage continuously
@@ -550,6 +579,60 @@ int main()
 			ffs = f_unlink("t003.bin");
 			if(ffs != FR_OK)
 				xil_printf("-21\n");	//indicate failure to the GUI
+			break;
+		case 12: //Invert Output Phase
+			//calling this case will always write to the SPI to invert the output signal
+			//turn the ADC on
+			enable_state = 1;
+			Xil_Out32 (XPAR_AXI_GPIO_18_BASEADDR, ((u32)enable_state));	//set enable device
+
+			SendBuf[0] = 0x00;	//Writing 1 byte
+			SendBuf[1] = 0x14;	//Reading register 8
+			SendBuf[2] = 0x04;	//Invert output mode
+			Status = XSpiPs_PolledTransfer(&SpiInstance, SendBuf, NULL, ByteCount);
+			//Transfer to hardware register
+			while(SpiInstance.IsBusy == TRUE)
+			{
+					//hold the system here
+			}
+			SendBuf[0] = 0x00;
+			SendBuf[1] = 0xFF;
+			SendBuf[2] = 0x01;
+			Status = XSpiPs_PolledTransfer(&SpiInstance, SendBuf, NULL, ByteCount);
+			while(SpiInstance.IsBusy == TRUE)
+			{
+					//hold the system here
+			}
+
+			xil_printf("output mode inverted\n");
+
+			break;
+		case 13: //Un-Invert Output Phase
+			//calling this case will always write to the SPI to un-invert the output signal
+			//turn the ADC on
+			enable_state = 1;
+			Xil_Out32 (XPAR_AXI_GPIO_18_BASEADDR, ((u32)enable_state));	//set enable device
+
+			SendBuf[0] = 0x00;	//Writing 1 byte
+			SendBuf[1] = 0x14;	//Reading register 8
+			SendBuf[2] = 0x00;	//Un-invert output mode
+			Status = XSpiPs_PolledTransfer(&SpiInstance, SendBuf, NULL, ByteCount);
+			//Transfer to hardware register
+			while(SpiInstance.IsBusy == TRUE)
+			{
+					//hold the system here
+			}
+			SendBuf[0] = 0x00;
+			SendBuf[1] = 0xFF;
+			SendBuf[2] = 0x01;
+			Status = XSpiPs_PolledTransfer(&SpiInstance, SendBuf, NULL, ByteCount);
+			while(SpiInstance.IsBusy == TRUE)
+			{
+					//hold the system here
+			}
+
+			xil_printf("output mode un-inverted\n");
+
 			break;
 		default :
 			//handle bad case selections
@@ -866,17 +949,23 @@ int PrintWFData( ){
 	int data = 0;
 	int dram_addr = 0;
 	int dram_base = 0xa000000;		// 167772160 + 4096 = 167776256
-	int dram_ceiling = 0xa001000;	// this reads out 4096/4 ints from the buffer
+	int dram_ceiling = 0xa001000;	// this reads out 4096/4 = 1024 ints from the buffer
 
 	Xil_DCacheInvalidateRange(0x00000000, 65536);	//make sure the PS doesn't corrupt the memory by accessing while doing DMA transfer
 
+	//print BEGIN string //using the reverse of the sync marker: 0x35 8F E2 53
+//	xil_printf("898622035\r\n");	//add to the next iteration, need to maintain this version of the board software for now
+
 	dram_addr = dram_base;
-	while(dram_addr <= dram_ceiling)	//will loop over 49152/4 addresses = 12288
+	while(dram_addr <= dram_ceiling)	//will loop over 4096/4 addresses = 1024
 	{
-		data = Xil_In32(dram_addr);	//grab the int from DRAM
+		data = Xil_In32(dram_addr);
 		dram_addr += 4;
 		xil_printf("%d\r\n", data);
 	}
+
+	//print END string //using the sync marker: 0x35 2E F8 53
+//	xil_printf("892270675\r\n");
 
 	return status;
 }

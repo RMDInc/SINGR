@@ -95,6 +95,9 @@ namespace lunaHMaptestbed {
 	private: System::ComponentModel::BackgroundWorker^  backgroundWorker1;
 	private: System::Windows::Forms::Label^  label1;
 	private: System::Windows::Forms::ComboBox^  comboBox2;
+	private: System::Windows::Forms::Button^  b_30sWFCap;
+	private: System::Windows::Forms::CheckBox^  chk_displayWFs;
+
 
 	private: bool wfCap_run;
 
@@ -138,6 +141,8 @@ namespace lunaHMaptestbed {
 			this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
 			this->label1 = (gcnew System::Windows::Forms::Label());
 			this->comboBox2 = (gcnew System::Windows::Forms::ComboBox());
+			this->b_30sWFCap = (gcnew System::Windows::Forms::Button());
+			this->chk_displayWFs = (gcnew System::Windows::Forms::CheckBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_DisplayWaveforms))->BeginInit();
 			this->menuStrip1->SuspendLayout();
 			this->SuspendLayout();
@@ -186,6 +191,7 @@ namespace lunaHMaptestbed {
 			this->label5->TabIndex = 43;
 			this->label5->Text = L"Trigger Threshold";
 			this->label5->TextAlign = System::Drawing::ContentAlignment::MiddleLeft;
+			this->label5->Visible = false;
 			// 
 			// tb_trigger_threshold
 			// 
@@ -193,6 +199,7 @@ namespace lunaHMaptestbed {
 			this->tb_trigger_threshold->Name = L"tb_trigger_threshold";
 			this->tb_trigger_threshold->Size = System::Drawing::Size(110, 20);
 			this->tb_trigger_threshold->TabIndex = 38;
+			this->tb_trigger_threshold->Visible = false;
 			// 
 			// textBox6
 			// 
@@ -219,6 +226,7 @@ namespace lunaHMaptestbed {
 			this->bChangeThreshold->TabIndex = 30;
 			this->bChangeThreshold->Text = L"Change Trigger Threshold";
 			this->bChangeThreshold->UseVisualStyleBackColor = true;
+			this->bChangeThreshold->Visible = false;
 			this->bChangeThreshold->Click += gcnew System::EventHandler(this, &captureWaveformsPopup::bChangeThreshold_Click);
 			// 
 			// bCaptureWFs
@@ -229,11 +237,13 @@ namespace lunaHMaptestbed {
 			this->bCaptureWFs->TabIndex = 28;
 			this->bCaptureWFs->Text = L"Capture Waveforms";
 			this->bCaptureWFs->UseVisualStyleBackColor = true;
+			this->bCaptureWFs->Visible = false;
 			this->bCaptureWFs->Click += gcnew System::EventHandler(this, &captureWaveformsPopup::bCaptureWFs_Click);
 			// 
 			// serialPort1
 			// 
-			this->serialPort1->BaudRate = 115200;
+			this->serialPort1->BaudRate = 921600;
+			this->serialPort1->ReadBufferSize = 16384;
 			// 
 			// b_closeWFwindow
 			// 
@@ -257,6 +267,8 @@ namespace lunaHMaptestbed {
 			// chk_stf
 			// 
 			this->chk_stf->AutoSize = true;
+			this->chk_stf->Checked = true;
+			this->chk_stf->CheckState = System::Windows::Forms::CheckState::Checked;
 			this->chk_stf->Location = System::Drawing::Point(781, 359);
 			this->chk_stf->Name = L"chk_stf";
 			this->chk_stf->Size = System::Drawing::Size(106, 17);
@@ -287,9 +299,9 @@ namespace lunaHMaptestbed {
 			this->label8->AutoSize = true;
 			this->label8->Location = System::Drawing::Point(125, 559);
 			this->label8->Name = L"label8";
-			this->label8->Size = System::Drawing::Size(98, 13);
+			this->label8->Size = System::Drawing::Size(141, 13);
 			this->label8->TabIndex = 51;
-			this->label8->Text = L"Save File Location:";
+			this->label8->Text = L"Save File Location: (use .txt)";
 			// 
 			// menuStrip1
 			// 
@@ -313,21 +325,21 @@ namespace lunaHMaptestbed {
 			// changeAxesWFToolStripMenuItem
 			// 
 			this->changeAxesWFToolStripMenuItem->Name = L"changeAxesWFToolStripMenuItem";
-			this->changeAxesWFToolStripMenuItem->Size = System::Drawing::Size(158, 22);
+			this->changeAxesWFToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->changeAxesWFToolStripMenuItem->Text = L"Change Axes";
 			this->changeAxesWFToolStripMenuItem->Click += gcnew System::EventHandler(this, &captureWaveformsPopup::changeAxesWFToolStripMenuItem_Click);
 			// 
 			// clearChartWFToolStripMenuItem
 			// 
 			this->clearChartWFToolStripMenuItem->Name = L"clearChartWFToolStripMenuItem";
-			this->clearChartWFToolStripMenuItem->Size = System::Drawing::Size(158, 22);
+			this->clearChartWFToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->clearChartWFToolStripMenuItem->Text = L"Clear Chart";
 			this->clearChartWFToolStripMenuItem->Click += gcnew System::EventHandler(this, &captureWaveformsPopup::clearChartWFToolStripMenuItem_Click);
 			// 
 			// resetCOMPortWFToolStripMenuItem
 			// 
 			this->resetCOMPortWFToolStripMenuItem->Name = L"resetCOMPortWFToolStripMenuItem";
-			this->resetCOMPortWFToolStripMenuItem->Size = System::Drawing::Size(158, 22);
+			this->resetCOMPortWFToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->resetCOMPortWFToolStripMenuItem->Text = L"Reset COM Port";
 			this->resetCOMPortWFToolStripMenuItem->Click += gcnew System::EventHandler(this, &captureWaveformsPopup::resetCOMPortWFToolStripMenuItem_Click);
 			// 
@@ -359,11 +371,35 @@ namespace lunaHMaptestbed {
 			this->comboBox2->TabIndex = 54;
 			this->comboBox2->SelectedIndexChanged += gcnew System::EventHandler(this, &captureWaveformsPopup::comboBox2_SelectedIndexChanged);
 			// 
+			// b_30sWFCap
+			// 
+			this->b_30sWFCap->Location = System::Drawing::Point(776, 194);
+			this->b_30sWFCap->Name = L"b_30sWFCap";
+			this->b_30sWFCap->Size = System::Drawing::Size(122, 36);
+			this->b_30sWFCap->TabIndex = 55;
+			this->b_30sWFCap->Text = L"30s Capture";
+			this->b_30sWFCap->UseVisualStyleBackColor = true;
+			this->b_30sWFCap->Click += gcnew System::EventHandler(this, &captureWaveformsPopup::b_30sWFCap_Click);
+			// 
+			// chk_displayWFs
+			// 
+			this->chk_displayWFs->AutoSize = true;
+			this->chk_displayWFs->Checked = true;
+			this->chk_displayWFs->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->chk_displayWFs->Location = System::Drawing::Point(776, 171);
+			this->chk_displayWFs->Name = L"chk_displayWFs";
+			this->chk_displayWFs->Size = System::Drawing::Size(117, 17);
+			this->chk_displayWFs->TabIndex = 56;
+			this->chk_displayWFs->Text = L"Display Waveforms";
+			this->chk_displayWFs->UseVisualStyleBackColor = true;
+			// 
 			// captureWaveformsPopup
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(956, 612);
+			this->Controls->Add(this->chk_displayWFs);
+			this->Controls->Add(this->b_30sWFCap);
 			this->Controls->Add(this->comboBox2);
 			this->Controls->Add(this->label1);
 			this->Controls->Add(this->label8);
@@ -719,5 +755,184 @@ private: System::Void comboBox2_SelectedIndexChanged(System::Object^  sender, Sy
 	}
 }
 
+private: System::Void b_30sWFCap_Click(System::Object^  sender, System::EventArgs^  e) {
+
+	//use this button to take a 30 second WF capture with the board
+	this->b_30sWFCap->Text = "Capturing...";
+	//Need to handle initializing a serial port
+	if (this->comboBox1->Text == String::Empty)
+	{
+		this->textBox6->Text = "Select a port above.";
+		this->b_30sWFCap->Text = "30s Capture";
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen)	//If the port is not open, open it
+		{
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->BaudRate = 921600;
+			this->serialPort1->Open();
+		}
+		else //if the port is open, 
+			this->textBox6->Text = "Connected to port " + (this->comboBox1->Text) + ".";
+	}
+
+	Application::DoEvents();
+	Sleep(500);
+
+	//check if the user wants to save the WF data
+	std::ofstream outputFileWF;
+	if (chk_stf->Checked)
+	{
+		if (this->tb_SaveFileLocation->Text == String::Empty)
+		{
+			this->textBox6->Text = "Please choose a file save location.";
+			this->b_30sWFCap->Text = "30s Capture";
+			return;
+		}
+
+		//get the filename
+		std::string str_fileNamewf;
+		String^ s_fileNamewf = this->saveFileDialog1->FileName;
+		str_fileNamewf = msclr::interop::marshal_as<std::string>(s_fileNamewf);
+
+		outputFileWF.open(str_fileNamewf, std::ios::app);
+
+		if (!outputFileWF)	//if we can't open the file
+		{
+			this->textBox6->Text = "Could not open the specified file.";
+			this->b_30sWFCap->Text = "30s Capture";
+			wfCap_run = !wfCap_run;
+			return;
+		}
+	}
+
+	// Make sure the user has selected a type of WF
+	// This tells us what mode to select in the uZ
+	// Just make the default be AA WFs
+	if (this->comboBox2->SelectedIndex < 0)
+	{
+		this->comboBox2->SelectedIndex = 0;
+		this->textBox6->Text = "AA WFs chosen by default.";
+		Sleep(500);
+	}
+
+	//Next, need to send commands over the port to the uZ board
+	if (this->serialPort1->IsOpen)
+	{
+		this->serialPort1->WriteLine("0");	//change mode at the main menu
+		Sleep(1000);
+
+		switch (this->comboBox2->SelectedIndex)
+		{
+		case 0:
+			this->serialPort1->WriteLine("0");	//AA 
+			break;
+		case 1:
+			this->serialPort1->WriteLine("1");	//LPF
+			break;
+		case 2:
+			this->serialPort1->WriteLine("2");	//DFF
+			break;
+		case 3:
+			this->serialPort1->WriteLine("3");	//TRG
+			break;
+		default:
+			this->serialPort1->WriteLine("0");
+			break;
+		}
+
+		this->serialPort1->WriteLine("6");	//select case 6 from main menu //this is WFs
+	}
+	else
+	{
+		this->textBox6->Text = "Serial port is not open.";
+		this->b_30sWFCap->Text = "30s Capture";
+		Application::DoEvents();
+		return;
+	}
+
+	//set variables
+	int loops = 0;
+	int index = 0;
+	double wfTimeBins = 0.0;
+	const int wfBins = 2048;		//there should be 1024 values in the incoming data //get two buffers
+	int wfArray[wfBins]{  };	//init array to 0's
+	int numWaveforms = 0;
+
+	//Set up the chart
+	this->ch_DisplayWaveforms->Series["Series1"]->Points->Clear();
+
+	//prepare time variables
+	time_t start_time, current_time;
+	start_time = time(&start_time);
+
+	while (start_time + 30 > time(&current_time))
+	{
+		/* Try and read in the data from the serial port */
+		try
+		{
+			Int32::TryParse(this->serialPort1->ReadLine(), wfArray[index]);
+			index++;
+			wfTimeBins += 4.0 / 1000.0;
+		}
+		/* If it times out, catch that and close the connection */
+		catch (const TimeoutException^)
+		{
+			this->serialPort1->WriteLine("q\r");	//quit the data stream
+			Sleep(1000);
+			this->serialPort1->Close();
+			this->textBox6->Text = "Connection closed due to timeout.";
+			this->b_30sWFCap->Text = "30s Capture";
+			return;
+		}
+
+		//just capture the data and save it to file to start
+		if (chk_stf->Checked && index >= (wfBins - 1))
+		{
+			for (index = 0; index < wfBins; index++) {
+				outputFileWF << wfArray[index] << std::endl;
+			}
+			//outputFileWF << "111111" << std::endl;
+
+			index = 0;
+			++numWaveforms;
+			wfTimeBins = 0.0;
+		}
+
+
+		if (chk_displayWFs->Checked == TRUE && numWaveforms % 2 == 0)
+		{
+			//If we have data, plot it on the chart
+			if (index <= (wfBins - 1))
+			{
+				if(index == 0)
+					this->ch_DisplayWaveforms->Series["Series1"]->Points->Clear();
+
+				this->ch_DisplayWaveforms->Series["Series1"]->Points->AddXY(wfTimeBins, (wfArray[index] / 16));
+				if (index % 200 == 0)
+					this->ch_DisplayWaveforms->Refresh();
+			}
+		}
+	}
+
+	this->serialPort1->WriteLine("q\r");	//quit the data stream
+	Sleep(1000);
+
+	this->b_30sWFCap->Text = "Capture Waveforms";
+
+	//this->serialPort1->DiscardInBuffer();	//just get rid of the buffer because we can't keep up and don't want it
+	if (outputFileWF.is_open())
+	{
+		outputFileWF.close();
+	}
+
+	this->textBox6->Text = "Capture finished.";
+	return;
+
+
+
+}
 };
 }

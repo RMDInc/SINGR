@@ -245,6 +245,8 @@ private: System::Windows::Forms::Label^  label12;
 private: System::Windows::Forms::TextBox^  tb_TX_progress;
 private: System::Windows::Forms::ToolStripMenuItem^  closeEthernetConnectionToolStripMenuItem;
 private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
+private: System::Windows::Forms::Button^  b_InvertSignal;
+private: System::Windows::Forms::Button^  b_UnInvertSignal;
 
 
 
@@ -283,16 +285,16 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 		void InitializeComponent(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
-			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea1 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series2 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series3 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series5 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea2 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series6 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
-			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea3 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
-			System::Windows::Forms::DataVisualization::Charting::Series^  series7 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea4 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series8 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series9 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series10 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series11 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series12 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea5 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series13 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^  chartArea6 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Series^  series14 = (gcnew System::Windows::Forms::DataVisualization::Charting::Series());
 			this->serialPort1 = (gcnew System::IO::Ports::SerialPort(this->components));
 			this->comboBox1 = (gcnew System::Windows::Forms::ComboBox());
 			this->label6 = (gcnew System::Windows::Forms::Label());
@@ -304,6 +306,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			this->captureWaveformsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->recoverMMToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->closeEthernetConnectionToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->endDAQToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->cOMPortToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->closeCOMToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->restartCOMToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
@@ -363,7 +366,8 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			this->tb_buff_disp_freq = (gcnew System::Windows::Forms::TextBox());
 			this->label12 = (gcnew System::Windows::Forms::Label());
 			this->tb_TX_progress = (gcnew System::Windows::Forms::TextBox());
-			this->endDAQToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->b_InvertSignal = (gcnew System::Windows::Forms::Button());
+			this->b_UnInvertSignal = (gcnew System::Windows::Forms::Button());
 			this->menuStrip1->SuspendLayout();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_PSD))->BeginInit();
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->ch_Spectrum))->BeginInit();
@@ -461,6 +465,13 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			this->closeEthernetConnectionToolStripMenuItem->Size = System::Drawing::Size(215, 22);
 			this->closeEthernetConnectionToolStripMenuItem->Text = L"Close Ethernet Connection";
 			this->closeEthernetConnectionToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::closeEthernetConnectionToolStripMenuItem_Click);
+			// 
+			// endDAQToolStripMenuItem
+			// 
+			this->endDAQToolStripMenuItem->Name = L"endDAQToolStripMenuItem";
+			this->endDAQToolStripMenuItem->Size = System::Drawing::Size(215, 22);
+			this->endDAQToolStripMenuItem->Text = L"End DAQ";
+			this->endDAQToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::endDAQToolStripMenuItem_Click);
 			// 
 			// cOMPortToolStripMenuItem
 			// 
@@ -581,49 +592,49 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// ch_PSD
 			// 
 			this->ch_PSD->AntiAliasing = System::Windows::Forms::DataVisualization::Charting::AntiAliasingStyles::None;
-			chartArea1->AxisX->IsStartedFromZero = false;
-			chartArea1->AxisX->Maximum = 600000;
-			chartArea1->AxisX->Minimum = 0;
-			chartArea1->AxisY->Maximum = 2;
-			chartArea1->AxisY->Minimum = 0;
-			chartArea1->Name = L"ChartArea1";
-			this->ch_PSD->ChartAreas->Add(chartArea1);
+			chartArea4->AxisX->IsStartedFromZero = false;
+			chartArea4->AxisX->Maximum = 600000;
+			chartArea4->AxisX->Minimum = 0;
+			chartArea4->AxisY->Maximum = 2;
+			chartArea4->AxisY->Minimum = 0;
+			chartArea4->Name = L"ChartArea1";
+			this->ch_PSD->ChartAreas->Add(chartArea4);
 			this->ch_PSD->Location = System::Drawing::Point(13, 28);
 			this->ch_PSD->Name = L"ch_PSD";
-			series1->ChartArea = L"ChartArea1";
-			series1->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::FastPoint;
-			series1->MarkerSize = 2;
-			series1->Name = L"Series1";
-			series2->BorderWidth = 4;
-			series2->ChartArea = L"ChartArea1";
-			series2->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
-			series2->Color = System::Drawing::Color::Blue;
-			series2->Name = L"series_ECutLower";
-			series3->BorderWidth = 4;
-			series3->ChartArea = L"ChartArea1";
-			series3->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
-			series3->Color = System::Drawing::Color::Blue;
-			series3->Name = L"series_ECutUpper";
-			series4->BorderWidth = 4;
-			series4->ChartArea = L"ChartArea1";
-			series4->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
-			series4->Color = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
+			series8->ChartArea = L"ChartArea1";
+			series8->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::FastPoint;
+			series8->MarkerSize = 2;
+			series8->Name = L"Series1";
+			series9->BorderWidth = 4;
+			series9->ChartArea = L"ChartArea1";
+			series9->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
+			series9->Color = System::Drawing::Color::Blue;
+			series9->Name = L"series_ECutLower";
+			series10->BorderWidth = 4;
+			series10->ChartArea = L"ChartArea1";
+			series10->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
+			series10->Color = System::Drawing::Color::Blue;
+			series10->Name = L"series_ECutUpper";
+			series11->BorderWidth = 4;
+			series11->ChartArea = L"ChartArea1";
+			series11->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
+			series11->Color = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
 				static_cast<System::Int32>(static_cast<System::Byte>(0)));
-			series4->Name = L"series_FOMCutLeft";
-			series4->YValuesPerPoint = 2;
-			series5->BorderWidth = 4;
-			series5->ChartArea = L"ChartArea1";
-			series5->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
-			series5->Color = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
+			series11->Name = L"series_FOMCutLeft";
+			series11->YValuesPerPoint = 2;
+			series12->BorderWidth = 4;
+			series12->ChartArea = L"ChartArea1";
+			series12->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Line;
+			series12->Color = System::Drawing::Color::FromArgb(static_cast<System::Int32>(static_cast<System::Byte>(255)), static_cast<System::Int32>(static_cast<System::Byte>(128)),
 				static_cast<System::Int32>(static_cast<System::Byte>(0)));
-			series5->MarkerSize = 100;
-			series5->Name = L"series_FOMCutRight";
-			series5->YValuesPerPoint = 2;
-			this->ch_PSD->Series->Add(series1);
-			this->ch_PSD->Series->Add(series2);
-			this->ch_PSD->Series->Add(series3);
-			this->ch_PSD->Series->Add(series4);
-			this->ch_PSD->Series->Add(series5);
+			series12->MarkerSize = 100;
+			series12->Name = L"series_FOMCutRight";
+			series12->YValuesPerPoint = 2;
+			this->ch_PSD->Series->Add(series8);
+			this->ch_PSD->Series->Add(series9);
+			this->ch_PSD->Series->Add(series10);
+			this->ch_PSD->Series->Add(series11);
+			this->ch_PSD->Series->Add(series12);
 			this->ch_PSD->Size = System::Drawing::Size(706, 343);
 			this->ch_PSD->TabIndex = 29;
 			this->ch_PSD->Text = L"chart1";
@@ -632,51 +643,51 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// ch_Spectrum
 			// 
 			this->ch_Spectrum->AntiAliasing = System::Windows::Forms::DataVisualization::Charting::AntiAliasingStyles::None;
-			chartArea2->AxisX->IsStartedFromZero = false;
-			chartArea2->AxisX->Maximum = 600000;
-			chartArea2->AxisX->Minimum = 0;
-			chartArea2->AxisY->Maximum = 200;
-			chartArea2->AxisY->Minimum = 0;
-			chartArea2->Name = L"ChartArea1";
-			this->ch_Spectrum->ChartAreas->Add(chartArea2);
+			chartArea5->AxisX->IsStartedFromZero = false;
+			chartArea5->AxisX->Maximum = 600000;
+			chartArea5->AxisX->Minimum = 0;
+			chartArea5->AxisY->Maximum = 200;
+			chartArea5->AxisY->Minimum = 0;
+			chartArea5->Name = L"ChartArea1";
+			this->ch_Spectrum->ChartAreas->Add(chartArea5);
 			this->ch_Spectrum->IsSoftShadows = false;
 			this->ch_Spectrum->Location = System::Drawing::Point(13, 377);
 			this->ch_Spectrum->Name = L"ch_Spectrum";
-			series6->ChartArea = L"ChartArea1";
-			series6->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::StepLine;
-			series6->MarkerSize = 2;
-			series6->Name = L"Series1";
-			this->ch_Spectrum->Series->Add(series6);
-			this->ch_Spectrum->Size = System::Drawing::Size(706, 286);
+			series13->ChartArea = L"ChartArea1";
+			series13->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::StepLine;
+			series13->MarkerSize = 2;
+			series13->Name = L"Series1";
+			this->ch_Spectrum->Series->Add(series13);
+			this->ch_Spectrum->Size = System::Drawing::Size(706, 309);
 			this->ch_Spectrum->TabIndex = 30;
 			this->ch_Spectrum->Text = L"chart1";
 			this->ch_Spectrum->TextAntiAliasingQuality = System::Windows::Forms::DataVisualization::Charting::TextAntiAliasingQuality::Normal;
 			// 
 			// ch_FOM
 			// 
-			chartArea3->AxisX->Maximum = 2;
-			chartArea3->AxisX->Minimum = 0;
-			chartArea3->AxisY->IsStartedFromZero = false;
-			chartArea3->AxisY->Maximum = 1000;
-			chartArea3->AxisY->Minimum = 0;
-			chartArea3->Name = L"ChartArea1";
-			this->ch_FOM->ChartAreas->Add(chartArea3);
+			chartArea6->AxisX->Maximum = 2;
+			chartArea6->AxisX->Minimum = 0;
+			chartArea6->AxisY->IsStartedFromZero = false;
+			chartArea6->AxisY->Maximum = 1000;
+			chartArea6->AxisY->Minimum = 0;
+			chartArea6->Name = L"ChartArea1";
+			this->ch_FOM->ChartAreas->Add(chartArea6);
 			this->ch_FOM->Location = System::Drawing::Point(726, 28);
 			this->ch_FOM->Name = L"ch_FOM";
-			series7->ChartArea = L"ChartArea1";
-			series7->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Bar;
-			series7->CustomProperties = L"PointWidth=0.01";
-			series7->Name = L"Series1";
-			this->ch_FOM->Series->Add(series7);
+			series14->ChartArea = L"ChartArea1";
+			series14->ChartType = System::Windows::Forms::DataVisualization::Charting::SeriesChartType::Bar;
+			series14->CustomProperties = L"PointWidth=0.01";
+			series14->Name = L"Series1";
+			this->ch_FOM->Series->Add(series14);
 			this->ch_FOM->Size = System::Drawing::Size(531, 343);
 			this->ch_FOM->TabIndex = 31;
 			this->ch_FOM->Text = L"chart1";
 			// 
 			// b_SetIntegrationTimes
 			// 
-			this->b_SetIntegrationTimes->Location = System::Drawing::Point(903, 471);
+			this->b_SetIntegrationTimes->Location = System::Drawing::Point(900, 470);
 			this->b_SetIntegrationTimes->Name = L"b_SetIntegrationTimes";
-			this->b_SetIntegrationTimes->Size = System::Drawing::Size(152, 41);
+			this->b_SetIntegrationTimes->Size = System::Drawing::Size(150, 41);
 			this->b_SetIntegrationTimes->TabIndex = 8;
 			this->b_SetIntegrationTimes->Text = L"Set Integration Times";
 			this->b_SetIntegrationTimes->UseVisualStyleBackColor = true;
@@ -735,7 +746,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// label3
 			// 
 			this->label3->AutoSize = true;
-			this->label3->Location = System::Drawing::Point(901, 425);
+			this->label3->Location = System::Drawing::Point(900, 425);
 			this->label3->Name = L"label3";
 			this->label3->Size = System::Drawing::Size(46, 13);
 			this->label3->TabIndex = 39;
@@ -779,7 +790,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// 
 			// tb_updates
 			// 
-			this->tb_updates->Location = System::Drawing::Point(919, 616);
+			this->tb_updates->Location = System::Drawing::Point(919, 638);
 			this->tb_updates->Name = L"tb_updates";
 			this->tb_updates->ReadOnly = true;
 			this->tb_updates->Size = System::Drawing::Size(338, 20);
@@ -788,7 +799,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// label7
 			// 
 			this->label7->AutoSize = true;
-			this->label7->Location = System::Drawing::Point(860, 619);
+			this->label7->Location = System::Drawing::Point(860, 641);
 			this->label7->Name = L"label7";
 			this->label7->Size = System::Drawing::Size(50, 13);
 			this->label7->TabIndex = 45;
@@ -797,9 +808,9 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// b_capturePSD
 			// 
 			this->b_capturePSD->Enabled = false;
-			this->b_capturePSD->Location = System::Drawing::Point(904, 543);
+			this->b_capturePSD->Location = System::Drawing::Point(900, 564);
 			this->b_capturePSD->Name = L"b_capturePSD";
-			this->b_capturePSD->Size = System::Drawing::Size(151, 41);
+			this->b_capturePSD->Size = System::Drawing::Size(150, 41);
 			this->b_capturePSD->TabIndex = 10;
 			this->b_capturePSD->Text = L"Capture PSD";
 			this->b_capturePSD->UseVisualStyleBackColor = true;
@@ -807,7 +818,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// 
 			// b_saveFile
 			// 
-			this->b_saveFile->Location = System::Drawing::Point(733, 574);
+			this->b_saveFile->Location = System::Drawing::Point(733, 596);
 			this->b_saveFile->Name = L"b_saveFile";
 			this->b_saveFile->Size = System::Drawing::Size(107, 41);
 			this->b_saveFile->TabIndex = 9;
@@ -818,7 +829,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// chk_stf
 			// 
 			this->chk_stf->AutoSize = true;
-			this->chk_stf->Location = System::Drawing::Point(733, 540);
+			this->chk_stf->Location = System::Drawing::Point(733, 562);
 			this->chk_stf->Name = L"chk_stf";
 			this->chk_stf->Size = System::Drawing::Size(107, 17);
 			this->chk_stf->TabIndex = 48;
@@ -830,7 +841,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			this->chk_atf->AutoSize = true;
 			this->chk_atf->Checked = true;
 			this->chk_atf->CheckState = System::Windows::Forms::CheckState::Checked;
-			this->chk_atf->Location = System::Drawing::Point(733, 556);
+			this->chk_atf->Location = System::Drawing::Point(733, 578);
 			this->chk_atf->Name = L"chk_atf";
 			this->chk_atf->Size = System::Drawing::Size(94, 17);
 			this->chk_atf->TabIndex = 49;
@@ -839,7 +850,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// 
 			// tb_savefilename
 			// 
-			this->tb_savefilename->Location = System::Drawing::Point(725, 642);
+			this->tb_savefilename->Location = System::Drawing::Point(725, 664);
 			this->tb_savefilename->Name = L"tb_savefilename";
 			this->tb_savefilename->ReadOnly = true;
 			this->tb_savefilename->Size = System::Drawing::Size(532, 20);
@@ -848,7 +859,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// label8
 			// 
 			this->label8->AutoSize = true;
-			this->label8->Location = System::Drawing::Point(726, 624);
+			this->label8->Location = System::Drawing::Point(726, 646);
 			this->label8->Name = L"label8";
 			this->label8->Size = System::Drawing::Size(98, 13);
 			this->label8->TabIndex = 51;
@@ -864,7 +875,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// 
 			// tb_counterbox
 			// 
-			this->tb_counterbox->Location = System::Drawing::Point(1060, 554);
+			this->tb_counterbox->Location = System::Drawing::Point(1060, 576);
 			this->tb_counterbox->Name = L"tb_counterbox";
 			this->tb_counterbox->ReadOnly = true;
 			this->tb_counterbox->Size = System::Drawing::Size(20, 20);
@@ -883,7 +894,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// checkBox1
 			// 
 			this->checkBox1->AutoSize = true;
-			this->checkBox1->Location = System::Drawing::Point(1086, 551);
+			this->checkBox1->Location = System::Drawing::Point(1086, 573);
 			this->checkBox1->Name = L"checkBox1";
 			this->checkBox1->Size = System::Drawing::Size(83, 17);
 			this->checkBox1->TabIndex = 53;
@@ -893,7 +904,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// checkBox3
 			// 
 			this->checkBox3->AutoSize = true;
-			this->checkBox3->Location = System::Drawing::Point(1174, 551);
+			this->checkBox3->Location = System::Drawing::Point(1174, 573);
 			this->checkBox3->Name = L"checkBox3";
 			this->checkBox3->Size = System::Drawing::Size(61, 17);
 			this->checkBox3->TabIndex = 55;
@@ -903,7 +914,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// checkBox4
 			// 
 			this->checkBox4->AutoSize = true;
-			this->checkBox4->Location = System::Drawing::Point(1174, 567);
+			this->checkBox4->Location = System::Drawing::Point(1174, 589);
 			this->checkBox4->Name = L"checkBox4";
 			this->checkBox4->Size = System::Drawing::Size(83, 17);
 			this->checkBox4->TabIndex = 56;
@@ -913,7 +924,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// checkBox2
 			// 
 			this->checkBox2->AutoSize = true;
-			this->checkBox2->Location = System::Drawing::Point(1086, 567);
+			this->checkBox2->Location = System::Drawing::Point(1086, 589);
 			this->checkBox2->Name = L"checkBox2";
 			this->checkBox2->Size = System::Drawing::Size(78, 17);
 			this->checkBox2->TabIndex = 54;
@@ -923,7 +934,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// label9
 			// 
 			this->label9->AutoSize = true;
-			this->label9->Location = System::Drawing::Point(855, 593);
+			this->label9->Location = System::Drawing::Point(855, 615);
 			this->label9->Name = L"label9";
 			this->label9->Size = System::Drawing::Size(58, 13);
 			this->label9->TabIndex = 58;
@@ -931,7 +942,7 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			// 
 			// tb_startTime
 			// 
-			this->tb_startTime->Location = System::Drawing::Point(919, 590);
+			this->tb_startTime->Location = System::Drawing::Point(919, 612);
 			this->tb_startTime->Name = L"tb_startTime";
 			this->tb_startTime->ReadOnly = true;
 			this->tb_startTime->Size = System::Drawing::Size(338, 20);
@@ -1021,18 +1032,33 @@ private: System::Windows::Forms::ToolStripMenuItem^  endDAQToolStripMenuItem;
 			this->tb_TX_progress->Size = System::Drawing::Size(100, 20);
 			this->tb_TX_progress->TabIndex = 69;
 			// 
-			// endDAQToolStripMenuItem
+			// b_InvertSignal
 			// 
-			this->endDAQToolStripMenuItem->Name = L"endDAQToolStripMenuItem";
-			this->endDAQToolStripMenuItem->Size = System::Drawing::Size(215, 22);
-			this->endDAQToolStripMenuItem->Text = L"End DAQ";
-			this->endDAQToolStripMenuItem->Click += gcnew System::EventHandler(this, &MyForm::endDAQToolStripMenuItem_Click);
+			this->b_InvertSignal->Location = System::Drawing::Point(900, 517);
+			this->b_InvertSignal->Name = L"b_InvertSignal";
+			this->b_InvertSignal->Size = System::Drawing::Size(70, 41);
+			this->b_InvertSignal->TabIndex = 70;
+			this->b_InvertSignal->Text = L"Invert";
+			this->b_InvertSignal->UseVisualStyleBackColor = true;
+			this->b_InvertSignal->Click += gcnew System::EventHandler(this, &MyForm::b_InvertSignal_Click);
+			// 
+			// b_UnInvertSignal
+			// 
+			this->b_UnInvertSignal->Location = System::Drawing::Point(980, 517);
+			this->b_UnInvertSignal->Name = L"b_UnInvertSignal";
+			this->b_UnInvertSignal->Size = System::Drawing::Size(70, 41);
+			this->b_UnInvertSignal->TabIndex = 71;
+			this->b_UnInvertSignal->Text = L"Un-invert";
+			this->b_UnInvertSignal->UseVisualStyleBackColor = true;
+			this->b_UnInvertSignal->Click += gcnew System::EventHandler(this, &MyForm::b_UnInvertSignal_Click);
 			// 
 			// MyForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1269, 673);
+			this->ClientSize = System::Drawing::Size(1269, 698);
+			this->Controls->Add(this->b_UnInvertSignal);
+			this->Controls->Add(this->b_InvertSignal);
 			this->Controls->Add(this->tb_TX_progress);
 			this->Controls->Add(this->label12);
 			this->Controls->Add(this->tb_buff_disp_freq);
@@ -2440,6 +2466,74 @@ private: System::Void endDAQToolStripMenuItem_Click(System::Object^  sender, Sys
 
 	this->b_transferDataFile->Text = "Transfer SD Data File";
 	return;
+}
+
+// TESTING 06-05-2019
+// Send a serial command to the board to invert the output phase
+private: System::Void b_InvertSignal_Click(System::Object^  sender, System::EventArgs^  e) {
+	/* Open the serial port */
+	if (this->comboBox1->Text == String::Empty) {
+		this->tb_updates->Text = "Select a port above.";
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen) {
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+			this->tb_updates->Text = "Writing to port " + (this->comboBox1->Text);
+			this->b_InvertSignal->Enabled = false;
+		}
+		else {
+			this->tb_updates->Text = "Writing to port " + (this->comboBox1->Text);
+			this->b_InvertSignal->Enabled = false;
+			Application::DoEvents();
+		}
+	}
+
+	/* Send commands to the uZ over the serial connection */
+	this->serialPort1->WriteLine("12");	//choose Invert Output Phase from main menu
+	Sleep(1000);						//wait 1 second
+
+	this->serialPort1->DiscardInBuffer();
+
+	///* Clean up */
+	this->tb_updates->Text = "The signal has been inverted.";
+	this->b_InvertSignal->Enabled = true;
+}
+
+// TESTING 06-05-2019
+// Send a serial command to the board to UN-invert the output phase
+private: System::Void b_UnInvertSignal_Click(System::Object^  sender, System::EventArgs^  e) {
+	/* Open the serial port */
+	if (this->comboBox1->Text == String::Empty) {
+		this->tb_updates->Text = "Select a port above.";
+		return;
+	}
+	else
+	{
+		if (!this->serialPort1->IsOpen) {
+			this->serialPort1->PortName = this->comboBox1->Text;
+			this->serialPort1->Open();
+			this->tb_updates->Text = "Writing to port " + (this->comboBox1->Text);
+			this->b_UnInvertSignal->Enabled = false;
+		}
+		else {
+			this->tb_updates->Text = "Writing to port " + (this->comboBox1->Text);
+			this->b_UnInvertSignal->Enabled = false;
+			Application::DoEvents();
+		}
+	}
+
+	/* Send commands to the uZ over the serial connection */
+	this->serialPort1->WriteLine("13");	//choose Invert Output Phase from main menu
+	Sleep(1000);						//wait 1 second
+
+	this->serialPort1->DiscardInBuffer();
+
+	///* Clean up */
+	this->tb_updates->Text = "The signal has been un-inverted.";
+	this->b_UnInvertSignal->Enabled = true;
 }
 };
 }

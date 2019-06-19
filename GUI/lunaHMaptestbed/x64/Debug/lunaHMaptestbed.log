@@ -1,4 +1,6 @@
 ﻿  MyForm.cpp
+  captureWaveformsPopup.cpp
+  Generating Code...
   captureWaveformsPopup.obj : /DEBUG:FASTLINK is not supported when managed code is present; restarting link with /DEBUG:FULL
   captureWaveformsPopup.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
-  lunaHMaptestbed.vcxproj -> C:\Users\gstoddard\Desktop\GUI_W3_gjs01\x64\Debug\lunaHMaptestbed.exe
+  lunaHMaptestbed.vcxproj -> K:\users\GStoddard\SINGR_GitHub_Repository\GUI\x64\Debug\lunaHMaptestbed.exe

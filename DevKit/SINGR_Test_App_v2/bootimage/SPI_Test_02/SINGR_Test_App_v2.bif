@@ -1,0 +1,7 @@
+//arch = zynq; split = false; format = MCS
+the_ROM_image:
+{
+	[bootloader]K:\users\GStoddard\SINGR_GitHub_Repository\DevKit\SINGR_Test_App_v2_FSBL\Release\SINGR_Test_App_v2_FSBL.elf
+	K:\users\GStoddard\SINGR_GitHub_Repository\DevKit\design_1_wrapper_hw_platform_0\design_1_wrapper.bit
+	K:\users\GStoddard\SINGR_GitHub_Repository\DevKit\SINGR_Test_App_v2\Release\SINGR_Test_App_v2.elf
+}
